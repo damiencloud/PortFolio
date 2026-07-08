@@ -1,0 +1,181 @@
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Download, Menu, X } from "lucide-react";
+import { siteConfig, mainNavLinks } from "@/content";
+
+export function FloatingNavbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+
+      // Section tracking logic
+      const scrollPosition = window.scrollY + 120;
+      const sections = mainNavLinks.map((link) => link.href.substring(1));
+      sections.push("home");
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <>
+      {/* Top Border Scroll Progress Indicator */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400 origin-left z-[9999]"
+        style={{ scaleX }}
+      />
+
+      <motion.header
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 1 }}
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full px-6 md:px-12 py-6",
+          isScrolled ? "py-4" : "py-6"
+        )}
+      >
+        <div
+          className={cn(
+            "max-w-7xl mx-auto flex items-center justify-between transition-all duration-300 rounded-full px-6 py-2.5 border border-transparent",
+            isScrolled
+              ? "bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md shadow-[0_4px_30px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.15)] border-neutral-200/50 dark:border-neutral-800/50"
+              : ""
+          )}
+        >
+          {/* Logo */}
+          <a
+            href="#home"
+            className="flex items-center gap-1.5 font-mono text-lg font-bold text-neutral-900 dark:text-neutral-50 tracking-wider hover:opacity-80 transition-opacity"
+          >
+            <span className="text-indigo-500 font-extrabold">&lt;</span>
+            {siteConfig.logo}
+            <span className="text-indigo-500 font-extrabold">/&gt;</span>
+          </a>
+
+          {/* Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-1.5" aria-label="Main Navigation">
+            {mainNavLinks.map((link) => {
+              const isActive = activeSection === link.href.substring(1);
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className={cn(
+                    "relative px-4 py-1.5 text-sm font-medium rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
+                    isActive
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavBackground"
+                      className="absolute inset-0 bg-neutral-100 dark:bg-neutral-900 rounded-full -z-10"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  {link.label}
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            <a
+              href={siteConfig.resumeUrl}
+              download
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-neutral-900 dark:bg-neutral-50 text-neutral-50 dark:text-neutral-950 border border-transparent hover:bg-neutral-800 dark:hover:bg-neutral-200 hover-elevate transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+            >
+              <Download size={13} />
+              Resume
+            </a>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-menu"
+              className="flex md:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-800 dark:text-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Mobile Menu Panel */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            id="mobile-navigation-menu"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-lg flex flex-col justify-center p-8 md:hidden"
+          >
+            <nav className="flex flex-col gap-6 items-center text-center">
+              {mainNavLinks.map((link, idx) => (
+                <motion.a
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "text-2xl font-semibold tracking-wide hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors",
+                    activeSection === link.href.substring(1)
+                      ? "text-indigo-600 dark:text-indigo-400"
+                      : "text-neutral-700 dark:text-neutral-300"
+                  )}
+                >
+                  {link.label}
+                </motion.a>
+              ))}
+              <motion.a
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: mainNavLinks.length * 0.05 }}
+                href={siteConfig.resumeUrl}
+                download
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-4 flex items-center gap-2 px-6 py-3 rounded-full text-base font-semibold bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all shadow-[0_4px_14px_rgba(99,102,241,0.4)]"
+              >
+                <Download size={18} />
+                Download Resume
+              </motion.a>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
