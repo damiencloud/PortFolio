@@ -52,6 +52,9 @@ export function InteractiveKeyboard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [logosLoaded, setLogosLoaded] = useState(false);
+  const logosRef = useRef<{ [key: string]: HTMLImageElement }>({});
+
   const [isMuted, setIsMuted] = useState(false);
   const isMutedRef = useRef(isMuted);
 
@@ -59,6 +62,58 @@ export function InteractiveKeyboard() {
   useEffect(() => {
     isMutedRef.current = isMuted;
   }, [isMuted]);
+
+  // Preload all official SVG brand assets from local directory
+  useEffect(() => {
+    const logoFiles: { [key: string]: string } = {
+      "python": "/tech-logos/python.svg",
+      "javascript": "/tech-logos/javascript.svg",
+      "html5": "/tech-logos/html5.svg",
+      "css3": "/tech-logos/css3.svg",
+      "sql": "/tech-logos/mysql.svg",
+      "react.js": "/tech-logos/react.svg",
+      "react": "/tech-logos/react.svg",
+      "next.js": "/tech-logos/nextdotjs.svg",
+      "tailwind css": "/tech-logos/tailwindcss.svg",
+      "django": "/tech-logos/django.svg",
+      "postgresql": "/tech-logos/postgresql.svg",
+      "sqlite": "/tech-logos/sqlite.svg",
+      "supabase": "/tech-logos/supabase.svg",
+      "aws (lightsail, ec2)": "/tech-logos/amazonwebservices.svg",
+      "aws": "/tech-logos/amazonwebservices.svg",
+      "git & github": "/tech-logos/git.svg",
+      "git": "/tech-logos/git.svg",
+      "github": "/tech-logos/github.svg",
+      "github actions": "/tech-logos/github.svg",
+      "node.js": "/tech-logos/nodedotjs.svg",
+      "express.js": "/tech-logos/express.svg",
+      "docker": "/tech-logos/docker.svg",
+      "mongodb": "/tech-logos/mongodb.svg",
+      "vite": "/tech-logos/vite.svg",
+      "framer motion": "/tech-logos/framer.svg",
+      "gsap": "/tech-logos/greensock.svg"
+    };
+
+    const promises = Object.entries(logoFiles).map(([key, url]) => {
+      return new Promise<void>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = url;
+        img.onload = () => {
+          logosRef.current[key] = img;
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn(`Failed to preload logo for ${key} at ${url}`);
+          resolve(); // Resolve to avoid blocking keyboard loop
+        };
+      });
+    });
+
+    Promise.all(promises).then(() => {
+      setLogosLoaded(true);
+    });
+  }, []);
 
   // Synthesize realistic click sound procedurally using Web Audio API
   const playClickSound = () => {
@@ -135,6 +190,7 @@ export function InteractiveKeyboard() {
   skillsRef.current = keyboardSkills;
 
   useEffect(() => {
+    if (!logosLoaded) return;
     if (!canvasRef.current || !containerRef.current) return;
 
     const currentSkills = skillsRef.current;
@@ -269,7 +325,7 @@ export function InteractiveKeyboard() {
     ledMesh.position.set(caseWidth / 2 - 0.28, 0.18, -caseDepth / 2 + 0.28);
     keyboardGroup.add(ledMesh);
 
-    // 5.1 Dynamic High-Fidelity Canvas Vector Drawing (512x512)
+    // 5.1 Dynamic High-Fidelity Canvas SVG Logo Drawing (512x512)
     const keyTextures: { [key: string]: { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } } = {};
     const keyHoverTextures: { [key: string]: { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } } = {};
 
@@ -286,257 +342,65 @@ export function InteractiveKeyboard() {
       ctx.translate(cx, cy);
       const r = size / 2;
 
-      // Color mapping: if bump map render, lock all vectors to high height value (white)
-      const mainColor = isBumpMap ? "#ffffff" : "#ffffff";
-      const accentColor = isBumpMap ? "#ffffff" : "#61dafb";
-      const yellowColor = isBumpMap ? "#ffffff" : "#f59e0b";
-      const greenColor = isBumpMap ? "#ffffff" : "#3ecf8e";
-      const subGreenColor = isBumpMap ? "#ffffff" : "#24b47e";
+      // Fit and color preloaded SVG path bounds onto keycap face
+      const drawSingleLogo = (img: HTMLImageElement, scale = 1.0) => {
+        const aspect = img.width / img.height || 1;
+        let drawW = size * scale;
+        let drawH = size * scale;
+        if (aspect > 1) {
+          drawH = (size * scale) / aspect;
+        } else {
+          drawW = (size * scale) * aspect;
+        }
+        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.globalCompositeOperation = "source-in";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(-drawW / 2, -drawH / 2, drawW, drawH);
+      };
 
-      ctx.strokeStyle = mainColor;
-      ctx.fillStyle = mainColor;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 10;
+      const keyName = name.toLowerCase();
 
-      switch (name.toLowerCase()) {
-        case "react.js":
-        case "react": {
-          ctx.strokeStyle = accentColor;
-          ctx.lineWidth = 9;
-          for (let i = 0; i < 3; i++) {
-            ctx.beginPath();
-            ctx.ellipse(0, 0, r * 0.95, r * 0.35, (i * Math.PI) / 3, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-          ctx.fillStyle = accentColor;
-          ctx.beginPath();
-          ctx.arc(0, 0, r * 0.18, 0, Math.PI * 2);
-          ctx.fill();
-          break;
-        }
-        case "typescript": {
-          ctx.font = "bold 96px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("TS", 0, 0);
-          break;
-        }
-        case "javascript": {
-          ctx.font = "bold 96px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = isHovered ? "#ffffff" : (isBumpMap ? "#ffffff" : "#1e1e24");
-          ctx.fillText("JS", 0, 0);
-          break;
-        }
-        case "html & css":
-        case "html": {
-          // Double logos html and css next to each other
+      if (keyName === "html & css") {
+        const imgHtml = logosRef.current["html5"];
+        const imgCss = logosRef.current["css3"];
+        if (imgHtml && imgCss) {
           ctx.save();
-          ctx.translate(-r * 0.42, 0);
-          ctx.beginPath();
-          ctx.moveTo(0, -r * 0.7);
-          ctx.lineTo(r * 0.55, -r * 0.48);
-          ctx.lineTo(r * 0.44, r * 0.48);
-          ctx.lineTo(0, r * 0.7);
-          ctx.lineTo(-r * 0.44, r * 0.48);
-          ctx.lineTo(-r * 0.55, -r * 0.48);
-          ctx.closePath();
-          ctx.stroke();
-          ctx.font = "bold 42px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("5", 0, 0);
+          ctx.translate(-r * 0.45, 0);
+          drawSingleLogo(imgHtml, 0.65);
           ctx.restore();
 
           ctx.save();
-          ctx.translate(r * 0.42, 0);
-          ctx.beginPath();
-          ctx.moveTo(0, -r * 0.7);
-          ctx.lineTo(r * 0.55, -r * 0.48);
-          ctx.lineTo(r * 0.44, r * 0.48);
-          ctx.lineTo(0, r * 0.7);
-          ctx.lineTo(-r * 0.44, r * 0.48);
-          ctx.lineTo(-r * 0.55, -r * 0.48);
-          ctx.closePath();
-          ctx.stroke();
-          ctx.font = "bold 42px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("3", 0, 0);
+          ctx.translate(r * 0.45, 0);
+          drawSingleLogo(imgCss, 0.65);
           ctx.restore();
-          break;
         }
-        case "sql": {
-          ctx.lineWidth = 8;
-          for (let i = 0; i < 3; i++) {
-            const cyOffset = -r * 0.4 + i * r * 0.4;
-            ctx.beginPath();
-            ctx.ellipse(0, cyOffset, r * 0.8, r * 0.22, 0, 0, Math.PI * 2);
-            ctx.stroke();
-            if (i > 0) {
-              ctx.beginPath();
-              ctx.moveTo(-r * 0.8, cyOffset - r * 0.4);
-              ctx.lineTo(-r * 0.8, cyOffset);
-              ctx.moveTo(r * 0.8, cyOffset - r * 0.4);
-              ctx.lineTo(r * 0.8, cyOffset);
-              ctx.stroke();
-            }
-          }
-          break;
-        }
-        case "next.js":
-        case "nextjs": {
-          ctx.beginPath();
-          ctx.arc(0, 0, r * 0.95, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.font = "bold 82px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("N", 0, 0);
-          break;
-        }
-        case "tailwind css":
-        case "tailwind": {
-          ctx.fillStyle = isBumpMap ? "#ffffff" : "#38bdf8";
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.65, -r * 0.15);
-          ctx.bezierCurveTo(-r * 0.35, -r * 0.65, r * 0.1, -r * 0.65, r * 0.4, -r * 0.15);
-          ctx.bezierCurveTo(r * 0.1, r * 0.35, -r * 0.35, r * 0.35, -r * 0.65, -r * 0.15);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.4, r * 0.15);
-          ctx.bezierCurveTo(-r * 0.1, -r * 0.35, r * 0.35, -r * 0.35, r * 0.65, r * 0.15);
-          ctx.bezierCurveTo(r * 0.35, r * 0.65, -r * 0.1, r * 0.65, -r * 0.4, r * 0.15);
-          ctx.closePath();
-          ctx.fill();
-          break;
-        }
-        case "django": {
-          ctx.font = "italic bold 90px serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("dj", -6, -8);
-          break;
-        }
-        case "postgresql": {
-          ctx.lineWidth = 7;
-          ctx.beginPath();
-          ctx.arc(0, -r * 0.1, r * 0.55, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.ellipse(-r * 0.6, -r * 0.1, r * 0.35, r * 0.55, Math.PI / 6, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.ellipse(r * 0.6, -r * 0.1, r * 0.35, r * 0.55, -Math.PI / 6, 0, Math.PI * 2);
-          ctx.stroke();
-          break;
-        }
-        case "sqlite": {
-          ctx.font = "bold 46px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("SQL", 0, -r * 0.3);
-          ctx.font = "bold 30px sans-serif";
-          ctx.fillText("LITE", 0, r * 0.4);
-          break;
-        }
-        case "supabase": {
-          ctx.fillStyle = greenColor;
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.35, -r * 0.85);
-          ctx.lineTo(r * 0.55, -r * 0.15);
-          ctx.lineTo(r * 0.1, -r * 0.15);
-          ctx.lineTo(r * 0.45, r * 0.35);
-          ctx.lineTo(-r * 0.45, -r * 0.1);
-          ctx.lineTo(-r * 0.1, -r * 0.1);
-          ctx.closePath();
-          ctx.fill();
-          break;
-        }
-        case "aws (lightsail, ec2)":
-        case "aws": {
-          ctx.font = "bold 46px sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("aws", 0, -r * 0.2);
-
-          ctx.strokeStyle = "#ffffff";
-          ctx.lineWidth = 6;
-          ctx.beginPath();
-          ctx.arc(0, r * 0.22, r * 0.58, 0.3, Math.PI - 0.3);
-          ctx.stroke();
-          break;
-        }
-        case "git & github":
-        case "git": {
-          ctx.lineWidth = 9;
+      } else if (keyName === "git & github") {
+        const imgGit = logosRef.current["git"];
+        const imgGithub = logosRef.current["github"];
+        if (imgGit && imgGithub) {
           ctx.save();
-          ctx.rotate(Math.PI / 4);
-          ctx.strokeRect(-r * 0.45, -r * 0.45, r * 0.9, r * 0.9);
+          ctx.translate(-r * 0.45, 0);
+          drawSingleLogo(imgGit, 0.65);
           ctx.restore();
 
-          ctx.beginPath();
-          ctx.moveTo(0, -r * 0.4);
-          ctx.lineTo(0, r * 0.4);
-          ctx.moveTo(0, 0);
-          ctx.lineTo(r * 0.3, -r * 0.3);
-          ctx.stroke();
-
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(0, -r * 0.4, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(0, r * 0.4, 14, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(r * 0.3, -r * 0.3, 14, 0, Math.PI * 2);
-          ctx.fill();
-          break;
+          ctx.save();
+          ctx.translate(r * 0.45, 0);
+          drawSingleLogo(imgGithub, 0.65);
+          ctx.restore();
         }
-        case "github actions": {
-          ctx.font = "bold 82px monospace";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(">_", 0, 0);
-          break;
-        }
-        case "python": {
-          ctx.lineWidth = 9;
-          ctx.beginPath();
-          ctx.moveTo(-r * 0.5, -r * 0.1);
-          ctx.lineTo(-r * 0.5, -r * 0.45);
-          ctx.quadraticCurveTo(-r * 0.5, -r * 0.75, -r * 0.1, -r * 0.75);
-          ctx.lineTo(r * 0.2, -r * 0.75);
-          ctx.quadraticCurveTo(r * 0.5, -r * 0.75, r * 0.5, -r * 0.45);
-          ctx.lineTo(r * 0.5, -r * 0.15);
-          ctx.lineTo(r * 0.1, -r * 0.15);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(r * 0.5, r * 0.1);
-          ctx.lineTo(r * 0.5, r * 0.45);
-          ctx.quadraticCurveTo(r * 0.5, r * 0.75, r * 0.1, r * 0.75);
-          ctx.lineTo(-r * 0.2, r * 0.75);
-          ctx.quadraticCurveTo(-r * 0.5, r * 0.75, -r * 0.5, r * 0.45);
-          ctx.lineTo(-r * 0.5, r * 0.15);
-          ctx.lineTo(-r * 0.1, r * 0.15);
-          ctx.stroke();
-          break;
-        }
-        default: {
+      } else {
+        const img = logosRef.current[keyName];
+        if (img) {
+          drawSingleLogo(img, 0.95);
+        } else {
           ctx.font = "bold 60px sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
+          ctx.fillStyle = "#ffffff";
           ctx.fillText(name.substring(0, 3).toUpperCase(), 0, 0);
-          break;
         }
       }
+
       ctx.restore();
     };
 
@@ -827,7 +691,7 @@ export function InteractiveKeyboard() {
         setSelectedSkill(cap.skill);
         playClickSound();
         triggerHaptic();
-        
+
         gsap.killTweensOf(cap.mesh.position);
         gsap.to(cap.mesh.position, {
           y: cap.restY - 0.14,
@@ -1038,7 +902,20 @@ export function InteractiveKeyboard() {
         t.bump.dispose();
       });
     };
-  }, []);
+  }, [logosLoaded]);
+
+  if (!logosLoaded) {
+    return (
+      <section className="py-20 md:py-36 px-6 md:px-12 max-w-6xl mx-auto relative z-10">
+        <div className="flex flex-col items-center justify-center min-h-[480px] gap-4">
+          <LucideIcons.Loader2 className="animate-spin text-indigo-500" size={32} />
+          <p className="text-sm font-mono text-neutral-450 uppercase tracking-widest">
+            Loading official brand SVGs...
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 md:py-36 px-6 md:px-12 max-w-6xl mx-auto relative z-10">
@@ -1065,7 +942,7 @@ export function InteractiveKeyboard() {
             {/* Audio Toggle Button */}
             <button
               onClick={() => setIsMuted(!isMuted)}
-              className="absolute top-4 right-4 p-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-105 dark:hover:bg-neutral-800 hover:text-indigo-500 transition-colors z-20 cursor-pointer"
+              className="absolute top-4 right-4 p-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-105 dark:hover:bg-neutral-850 hover:text-indigo-500 transition-colors z-20 cursor-pointer"
               aria-label="Toggle mechanical switch click sound"
             >
               {isMuted ? <LucideIcons.VolumeX size={15} /> : <LucideIcons.Volume2 size={15} />}
