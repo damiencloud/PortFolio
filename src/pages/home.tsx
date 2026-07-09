@@ -11,6 +11,7 @@ import { FloatingNavbar } from "@/components/FloatingNavbar";
 import { DockNav } from "@/components/DockNav";
 import { ChevronUp } from "lucide-react";
 import { siteConfig, footerNavLinks, socialLinks } from "@/content";
+import { DottedSurface } from "@/components/ui/dotted-surface";
 
 export default function Home() {
   const handleScrollToTop = (e: React.MouseEvent) => {
@@ -22,7 +23,7 @@ export default function Home() {
   const linkedinLink = socialLinks.find((s) => s.platform === "LinkedIn")?.url || "#";
 
   return (
-    <div className="relative min-h-screen w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
+    <DottedSurface className="relative min-h-screen w-full text-foreground transition-colors duration-300 overflow-x-hidden">
       {/* Background Interactive Effects */}
       <BackgroundEffects />
 
@@ -106,6 +107,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </DottedSurface>
   );
 }
