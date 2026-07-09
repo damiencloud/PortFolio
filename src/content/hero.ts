@@ -4,7 +4,7 @@ export const heroContent: HeroContent = {
   eyebrow: "Available for Opportunities",
   title: "Hi, I'm Damien Joseph Martin.",
   highlightWords: ["Damien", "Joseph", "Martin."],
-  description: "Aspiring Full Stack Developer passionate about building modern web applications, integrating AI solutions, and developing user-centric software through hands-on projects and industry experience.",
+  description: "Full Stack Developer focused on crafting modern web experiences with React, TypeScript, Node.js, Django, and cloud technologies. Dedicated to building performant, scalable, and visually engaging applications.",
   primaryCta: {
     label: "Explore Projects",
     href: "#projects",
