@@ -1,148 +1,199 @@
-import React, { useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+'use client';
+
+import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 
 export interface DottedSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   children?: React.ReactNode;
 }
 
-export function DottedSurface({
-  className,
-  children,
-  ...props
-}: DottedSurfaceProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export function DottedSurface({ className, children, ...props }: DottedSurfaceProps) {
+	const { theme } = useTheme();
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+	const containerRef = useRef<HTMLDivElement>(null);
+	const sceneRef = useRef<{
+		scene: THREE.Scene;
+		camera: THREE.PerspectiveCamera;
+		renderer: THREE.WebGLRenderer;
+		particles: THREE.Points[];
+		animationId: number;
+		count: number;
+	} | null>(null);
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+	useEffect(() => {
+		if (!containerRef.current) return;
 
-    let animationFrameId: number;
-    let width = (canvas.width = canvas.offsetWidth);
-    let height = (canvas.height = canvas.offsetHeight);
+		const SEPARATION = 150;
+		const AMOUNTX = 40;
+		const AMOUNTY = 60;
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
-    };
+		// Scene setup
+		const scene = new THREE.Scene();
+		
+		// Set fog color depending on theme to blend dots nicely at distance
+		const fogColor = theme === 'dark' ? 0x0a0a0c : 0xffffff;
+		scene.fog = new THREE.Fog(fogColor, 2000, 10000);
 
-    window.addEventListener("resize", handleResize);
+		const camera = new THREE.PerspectiveCamera(
+			60,
+			window.innerWidth / window.innerHeight,
+			1,
+			10000,
+		);
+		camera.position.set(0, 355, 1220);
 
-    // Grid details for the 3D Points lattice
-    const cols = 75;
-    const rows = 45;
-    const spacingX = 35;
-    const spacingY = 28;
-    const tilt = 1.05; // Tilted angle for 3D perspective
-    const cameraDistance = 750;
-    const focalLength = 550;
-    const amplitude = 35;
-    const speed = 0.025;
+		const renderer = new THREE.WebGLRenderer({
+			alpha: true,
+			antialias: true,
+		});
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.setClearColor(scene.fog.color, 0);
 
-    let time = 0;
+		// Remove any existing canvas child to avoid double renders in React 19 strict mode
+		const container = containerRef.current;
+		container.innerHTML = '';
+		container.appendChild(renderer.domElement);
 
-    const render = () => {
-      if (!ctx || !canvas) return;
+		// Create particles
+		const positions: number[] = [];
+		const colors: number[] = [];
 
-      // Base background color: light blackish
-      ctx.fillStyle = "#0c0c0e";
-      ctx.fillRect(0, 0, width, height);
+		// Create geometry for all particles
+		const geometry = new THREE.BufferGeometry();
 
-      // Create radial background glow
-      const bgGlow = ctx.createRadialGradient(
-        width / 2,
-        height / 2,
-        0,
-        width / 2,
-        height / 2,
-        Math.max(width, height) * 0.7
-      );
-      bgGlow.addColorStop(0, "#191921"); // Light blackish center
-      bgGlow.addColorStop(1, "#0a0a0c"); // Slightly darker edges
-      ctx.fillStyle = bgGlow;
-      ctx.fillRect(0, 0, width, height);
+		for (let ix = 0; ix < AMOUNTX; ix++) {
+			for (let iy = 0; iy < AMOUNTY; iy++) {
+				const x = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2;
+				const y = 0; // Will be animated
+				const z = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2;
 
-      time += speed;
+				positions.push(x, y, z);
+				if (theme === 'dark') {
+					colors.push(200, 200, 200);
+				} else {
+					colors.push(0, 0, 0);
+				}
+			}
+		}
 
-      // Render back-to-front for correct depth drawing order
-      for (let r = 0; r < rows; r++) {
-        const yNorm = (r - rows / 2) * spacingY;
+		geometry.setAttribute(
+			'position',
+			new THREE.Float32BufferAttribute(positions, 3),
+		);
+		geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
-        for (let c = 0; c < cols; c++) {
-          const xNorm = (c - cols / 2) * spacingX;
+		// Create material
+		const material = new THREE.PointsMaterial({
+			size: 8,
+			vertexColors: true,
+			transparent: true,
+			opacity: 0.8,
+			sizeAttenuation: true,
+		});
 
-          // Wave equation: two crossing offset sine waves
-          const zNorm = 
-            Math.sin(xNorm * 0.009 + time) * 
-            Math.cos(yNorm * 0.013 + time * 0.8) * 
-            amplitude;
+		// Create points object
+		const points = new THREE.Points(geometry, material);
+		scene.add(points);
 
-          // 3D rotations on X-axis (tilt)
-          const yRot = yNorm * Math.cos(tilt) - zNorm * Math.sin(tilt);
-          const zRot = yNorm * Math.sin(tilt) + zNorm * Math.cos(tilt);
+		let count = 0;
+		let animationId = 0;
 
-          const depth = zRot + cameraDistance;
+		// Animation function
+		const animate = () => {
+			animationId = requestAnimationFrame(animate);
 
-          if (depth > 10) {
-            const scale = focalLength / depth;
-            const screenX = xNorm * scale + width / 2;
-            const screenY = yRot * scale + height / 2;
+			const positionAttribute = geometry.attributes.position;
+			const positions = positionAttribute.array as Float32Array;
 
-            if (screenX >= 0 && screenX <= width && screenY >= 0 && screenY <= height) {
-              const dotSize = Math.max(0.3, 1.8 * scale);
-              // Opacity based on depth scale (dimmer further back, brighter up front)
-              const opacity = Math.min(1.0, Math.max(0.08, scale * 0.9));
+			let i = 0;
+			for (let ix = 0; ix < AMOUNTX; ix++) {
+				for (let iy = 0; iy < AMOUNTY; iy++) {
+					const index = i * 3;
 
-              ctx.beginPath();
-              ctx.arc(screenX, screenY, dotSize, 0, Math.PI * 2);
-              // White dots color
-              ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-              ctx.fill();
-            }
-          }
-        }
-      }
+					// Animate Y position with sine waves
+					positions[index + 1] =
+						Math.sin((ix + count) * 0.3) * 50 +
+						Math.sin((iy + count) * 0.5) * 50;
 
-      animationFrameId = requestAnimationFrame(render);
-    };
+					i++;
+				}
+			}
 
-    render();
+			positionAttribute.needsUpdate = true;
+			renderer.render(scene, camera);
+			count += 0.1;
+		};
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
+		// Handle window resize
+		const handleResize = () => {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		};
 
-  return (
-    <div
-      className={cn(
-        "relative w-full min-h-screen text-white overflow-hidden bg-[#0a0a0c]",
-        className
-      )}
-      {...props}
-    >
-      {/* Interactive 3D Canvas Background */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 size-full z-0 block pointer-events-none"
-      />
+		window.addEventListener('resize', handleResize);
 
-      {/* Light center white glow */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-[65vw] h-[65vw] max-w-[800px] max-h-[800px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.03)_40%,transparent_70%)] blur-[50px] z-0 mix-blend-screen"
-      />
+		// Start animation
+		animate();
 
-      {/* Content wrapper */}
-      <div className="relative z-10 size-full">
-        {children}
-      </div>
-    </div>
-  );
+		// Store references
+		sceneRef.current = {
+			scene,
+			camera,
+			renderer,
+			particles: [points],
+			animationId,
+			count,
+		};
+
+		// Cleanup function
+		return () => {
+			window.removeEventListener('resize', handleResize);
+
+			if (sceneRef.current) {
+				cancelAnimationFrame(sceneRef.current.animationId);
+
+				// Clean up Three.js objects
+				sceneRef.current.scene.traverse((object: THREE.Object3D) => {
+					if (object instanceof THREE.Points) {
+						object.geometry.dispose();
+						if (Array.isArray(object.material)) {
+							object.material.forEach((mat: THREE.Material) => mat.dispose());
+						} else {
+							object.material.dispose();
+						}
+					}
+				});
+
+				sceneRef.current.renderer.dispose();
+
+				if (container && sceneRef.current.renderer.domElement) {
+					if (container.contains(sceneRef.current.renderer.domElement)) {
+						container.removeChild(sceneRef.current.renderer.domElement);
+					}
+				}
+			}
+		};
+	}, [theme]);
+
+	return (
+		<div className={cn("relative min-h-screen w-full", className)} {...props}>
+			{/* Canvas Container positioned fixed behind */}
+			<div
+				ref={containerRef}
+				className="pointer-events-none fixed inset-0 -z-1"
+			/>
+			
+			{/* Content Wrapper */}
+			<div className="relative z-10 size-full">
+				{children}
+			</div>
+		</div>
+	);
 }
 
 export default DottedSurface;
