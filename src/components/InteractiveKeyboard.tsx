@@ -25,7 +25,7 @@ interface KeySkill {
 const skillMetaLookup: { [key: string]: { iconName: string; tooltipText: string; glowColor: string } } = {
   "Python": { iconName: "Code2", tooltipText: "Backend scripting, automation, and API pipelines", glowColor: "#3776AB" }, // Python Blue
   "JavaScript": { iconName: "Cpu", tooltipText: "Interactive client scripts and dynamic behaviors", glowColor: "#F7DF1E" }, // JS Yellow
-  "HTML & CSS": { iconName: "Layout", tooltipText: "Semantic document layouts and HTML/CSS structure", glowColor: "#E34F26" }, // HTML Orange
+  "HTML & CSS": { iconName: "Layout", tooltipText: "Semantic HTML structures and responsive CSS layouts", glowColor: "#E34F26" }, // HTML Orange
   "SQL": { iconName: "Database", tooltipText: "Structured queries and relational schema modeling", glowColor: "#00758F" }, // MySQL Teal
   "React.js": { iconName: "Globe", tooltipText: "Component-based declarative UI structures and hooks", glowColor: "#61DAFB" }, // React Cyan
   "Next.js": { iconName: "Globe", tooltipText: "Full-stack React frame with SSR, ISR, and server actions", glowColor: "#111111" }, // Black
@@ -51,6 +51,65 @@ function DetailIcon({ name, size = 20 }: { name: string; size?: number }) {
 export function InteractiveKeyboard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const [isMuted, setIsMuted] = useState(false);
+  const isMutedRef = useRef(isMuted);
+
+  // Keep ref updated to bypass stale closure triggers in listeners
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  // Synthesize realistic click sound procedurally using Web Audio API
+  const playClickSound = () => {
+    if (isMutedRef.current) return;
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+
+      // Sharp pop transient
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(1400, ctx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.04);
+      gain1.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+
+      // Hollow switches housing body resonance
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(260, ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.08);
+      gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+
+      osc1.start();
+      osc1.stop(ctx.currentTime + 0.05);
+
+      osc2.start();
+      osc2.stop(ctx.currentTime + 0.09);
+    } catch (e) {
+      console.warn("Audio Context synthesis blocked:", e);
+    }
+  };
+
+  // Subtle haptic tick trigger for touch screens
+  const triggerHaptic = () => {
+    try {
+      if (window.navigator && typeof window.navigator.vibrate === "function") {
+        window.navigator.vibrate(6);
+      }
+    } catch (e) {}
+  };
 
   // Automatically map skills to physical keyboard legends
   const keyboardSkills: KeySkill[] = skills.map((skill, idx) => {
@@ -85,7 +144,7 @@ export function InteractiveKeyboard() {
     // 1. Scene Setup
     const scene = new THREE.Scene();
 
-    // 2. Camera Setup (Ortholinear isometric style perspective)
+    // 2. Camera Setup (Ortholinear perspective)
     const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
     camera.position.set(0, 5.2, 7.8);
     camera.lookAt(0, -0.2, 0);
@@ -231,8 +290,8 @@ export function InteractiveKeyboard() {
       const mainColor = isBumpMap ? "#ffffff" : "#ffffff";
       const accentColor = isBumpMap ? "#ffffff" : "#61dafb";
       const yellowColor = isBumpMap ? "#ffffff" : "#f59e0b";
-      const greenColor = isBumpMap ? "#ffffff" : "#10b981";
-      const subGreenColor = isBumpMap ? "#ffffff" : "#059669";
+      const greenColor = isBumpMap ? "#ffffff" : "#3ecf8e";
+      const subGreenColor = isBumpMap ? "#ffffff" : "#24b47e";
 
       ctx.strokeStyle = mainColor;
       ctx.fillStyle = mainColor;
@@ -273,20 +332,40 @@ export function InteractiveKeyboard() {
         }
         case "html & css":
         case "html": {
+          // Double logos html and css next to each other
+          ctx.save();
+          ctx.translate(-r * 0.42, 0);
           ctx.beginPath();
-          ctx.moveTo(0, -r * 0.95);
-          ctx.lineTo(r * 0.78, -r * 0.65);
-          ctx.lineTo(r * 0.62, r * 0.65);
-          ctx.lineTo(0, r * 0.95);
-          ctx.lineTo(-r * 0.62, r * 0.65);
-          ctx.lineTo(-r * 0.78, -r * 0.65);
+          ctx.moveTo(0, -r * 0.7);
+          ctx.lineTo(r * 0.55, -r * 0.48);
+          ctx.lineTo(r * 0.44, r * 0.48);
+          ctx.lineTo(0, r * 0.7);
+          ctx.lineTo(-r * 0.44, r * 0.48);
+          ctx.lineTo(-r * 0.55, -r * 0.48);
           ctx.closePath();
           ctx.stroke();
-
-          ctx.font = "bold 60px sans-serif";
+          ctx.font = "bold 42px sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText("5", 0, 0);
+          ctx.restore();
+
+          ctx.save();
+          ctx.translate(r * 0.42, 0);
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.7);
+          ctx.lineTo(r * 0.55, -r * 0.48);
+          ctx.lineTo(r * 0.44, r * 0.48);
+          ctx.lineTo(0, r * 0.7);
+          ctx.lineTo(-r * 0.44, r * 0.48);
+          ctx.lineTo(-r * 0.55, -r * 0.48);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.font = "bold 42px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("3", 0, 0);
+          ctx.restore();
           break;
         }
         case "sql": {
@@ -562,7 +641,15 @@ export function InteractiveKeyboard() {
 
     const capGeo = createKeycapGeometry();
 
-    // 5.3 Generate Keycap meshes and layout centered rows
+    // 5.3 Recessed switches plate cutout geometry
+    const switchGeo = new THREE.BoxGeometry(0.78, 0.015, 0.78);
+    const switchMat = new THREE.MeshStandardMaterial({
+      color: 0x09090b,
+      roughness: 0.85,
+      metalness: 0.1
+    });
+
+    // 5.4 Generate Keycap meshes and layout centered rows
     const keycaps: {
       mesh: THREE.Group;
       skill: KeySkill;
@@ -585,6 +672,12 @@ export function InteractiveKeyboard() {
       const capGroup = new THREE.Group();
       capGroup.position.set(posX, posY, posZ);
       keyboardGroup.add(capGroup);
+
+      // Render dark recessed switch plate beneath keycap
+      const swMesh = new THREE.Mesh(switchGeo, switchMat);
+      swMesh.position.set(posX, 0.01, posZ);
+      swMesh.receiveShadow = true;
+      keyboardGroup.add(swMesh);
 
       // Underglow Ring Mesh
       const glowMat = new THREE.MeshBasicMaterial({
@@ -690,6 +783,8 @@ export function InteractiveKeyboard() {
           const cap = keycaps.find((k) => k.mesh === hitGroup);
           if (cap) {
             setSelectedSkill(cap.skill);
+            playClickSound();
+            triggerHaptic();
 
             // Depress Spring Rebound timeline click
             const tl = gsap.timeline();
@@ -730,6 +825,9 @@ export function InteractiveKeyboard() {
       const cap = keycaps.find((k) => k.skill.key === key);
       if (cap) {
         setSelectedSkill(cap.skill);
+        playClickSound();
+        triggerHaptic();
+        
         gsap.killTweensOf(cap.mesh.position);
         gsap.to(cap.mesh.position, {
           y: cap.restY - 0.14,
@@ -964,21 +1062,16 @@ export function InteractiveKeyboard() {
           {/* Column 1: WebGL 3D Canvas (Spans 7 columns) */}
           <div ref={containerRef} className="lg:col-span-7 h-[420px] md:h-[480px] w-full flex items-center justify-center relative bg-neutral-900/10 dark:bg-neutral-950/20 border border-neutral-200/40 dark:border-neutral-850/40 rounded-3xl overflow-hidden shadow-inner backdrop-blur-sm">
             
-            {/* Legend guide */}
-            <div className="absolute top-4 left-6 text-[9px] font-mono tracking-wider text-neutral-400 dark:text-neutral-500 uppercase">
-              RENDER_ENGINE: PHYSICAL_SHADERS v0.185
-            </div>
+            {/* Audio Toggle Button */}
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="absolute top-4 right-4 p-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white/60 dark:bg-neutral-900/60 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-105 dark:hover:bg-neutral-800 hover:text-indigo-500 transition-colors z-20 cursor-pointer"
+              aria-label="Toggle mechanical switch click sound"
+            >
+              {isMuted ? <LucideIcons.VolumeX size={15} /> : <LucideIcons.Volume2 size={15} />}
+            </button>
 
             <canvas ref={canvasRef} className="h-full w-full block cursor-grab active:cursor-grabbing" />
-
-            {/* Instruction Overlay */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-850 bg-white/60 dark:bg-neutral-900/60 font-mono text-[10px] text-neutral-500 backdrop-blur-md">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-              </span>
-              <span>LIVE INTERACTION DETECTOR: ACTIVE</span>
-            </div>
           </div>
 
           {/* Column 2: Selected Skill Case display (Spans 5 columns) */}
