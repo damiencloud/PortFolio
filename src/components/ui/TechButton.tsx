@@ -151,7 +151,7 @@ export function TechButton({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-[10px] font-mono whitespace-nowrap shadow-md pointer-events-none z-50 uppercase tracking-wider"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white text-[10px] font-mono w-max max-w-[180px] xs:max-w-[240px] whitespace-normal text-center shadow-md pointer-events-none z-50 uppercase tracking-wider"
           >
             {tooltipText}
             {/* Tooltip arrow */}

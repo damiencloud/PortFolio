@@ -60,7 +60,7 @@ export function CertificateCard({ cert, index }: CertificateCardProps) {
         hoverEffect={false}
         glowColor={cert.color}
         glowOpacity="opacity-30 dark:opacity-60"
-        className="p-6 flex flex-col justify-between h-[230px]"
+        className="p-6 flex flex-col justify-between min-h-[230px] h-auto"
       >
         {/* 3D Floating elements */}
         <div style={{ transform: "translateZ(30px)" }} className="flex justify-between items-start">
@@ -86,7 +86,7 @@ export function CertificateCard({ cert, index }: CertificateCardProps) {
             {cert.credentialId ? (
               <>
                 <span className="text-[9px] font-mono text-neutral-400 uppercase">ID</span>
-                <span className="text-[10px] font-mono text-neutral-600 dark:text-neutral-400 font-medium truncate max-w-[130px]">
+                <span className="text-[10px] font-mono text-neutral-600 dark:text-neutral-400 font-medium truncate max-w-[100px] xs:max-w-[150px]">
                   {cert.credentialId}
                 </span>
               </>

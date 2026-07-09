@@ -91,7 +91,7 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+    <section id="contact" className="py-20 md:py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       
       {/* Reusable Section Heading */}
       <SectionHeading
@@ -109,7 +109,7 @@ export function ContactSection() {
                 key={social.platform}
                 whileHover={{ scale: 1.01, y: -2 }}
                 onClick={() => window.open(social.url, "_blank")}
-                className="flex items-center gap-5 p-6 cursor-pointer group"
+                className="flex items-center gap-5 p-5 md:p-6 cursor-pointer group"
               >
                 <div className={cn("p-3.5 rounded-2xl group-hover:text-white transition-colors duration-300", styles.bg)}>
                   <ContactIcon name={social.iconName} />
@@ -127,7 +127,7 @@ export function ContactSection() {
 
         {/* Right Side: Message Card Input (Span 3 Columns) */}
         <div className="lg:col-span-3">
-          <GlassCard hoverEffect={false} className="p-8 h-full relative overflow-hidden">
+          <GlassCard hoverEffect={false} className="p-5 md:p-8 h-full relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
 
             <div className="flex items-center gap-2 text-indigo-500 font-semibold tracking-wider text-xs uppercase mb-6">

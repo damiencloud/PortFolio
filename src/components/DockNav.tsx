@@ -95,7 +95,7 @@ export function DockNav() {
       transition={{ duration: 0.5, delay: 1.2 }}
       onMouseMove={(e) => mouseX.set(e.clientX)}
       onMouseLeave={() => mouseX.set(Infinity)}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-end gap-3 px-4 py-3 rounded-2xl bg-white/20 dark:bg-neutral-950/20 border border-white/30 dark:border-neutral-900/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] backdrop-blur-xl"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden md:flex items-end gap-3 px-4 py-3 rounded-2xl bg-white/20 dark:bg-neutral-950/20 border border-white/30 dark:border-neutral-900/30 shadow-[0_8px_32px_rgba(0,0,0,0.08)] backdrop-blur-xl"
     >
       {dockItems.map((item) => (
         <DockItem

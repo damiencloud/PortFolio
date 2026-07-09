@@ -22,7 +22,7 @@ export function ProjectCard({ project, index, onReadCaseStudy }: ProjectCardProp
         project.featured ? "md:col-span-2" : "md:col-span-1"
       )}
     >
-      <div className="p-8">
+      <div className="p-5 md:p-8">
         {/* Top Row info */}
         <div className="flex justify-between items-center mb-6">
           <span className="font-mono text-sm text-neutral-400 dark:text-neutral-500">
@@ -72,7 +72,7 @@ export function ProjectCard({ project, index, onReadCaseStudy }: ProjectCardProp
       </div>
 
       {/* Bottom Card Footer Actions */}
-      <div className="border-t border-neutral-100 dark:border-neutral-900/60 px-8 py-5 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/20">
+      <div className="border-t border-neutral-100 dark:border-neutral-900/60 px-5 md:px-8 py-4 md:py-5 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/20">
         <a
           href={project.githubUrl}
           target="_blank"

@@ -28,7 +28,7 @@ export function BentoGrid() {
   const latestEducation = educationList[0];
 
   return (
-    <section id="about" className="py-36 px-6 md:px-12 max-w-7xl mx-auto z-10 relative">
+    <section id="about" className="py-20 md:py-36 px-6 md:px-12 max-w-7xl mx-auto z-10 relative">
       {/* Reusable Section Heading */}
       <SectionHeading
         label={aboutContent.sectionLabel}
@@ -36,14 +36,14 @@ export function BentoGrid() {
       />
 
       {/* Bento Layout Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[220px] md:auto-rows-[190px]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:auto-rows-[190px]">
         
         {/* Card 1: Main narrative Bio - Span 2 Columns, Span 2 Rows */}
         <GlassCard
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="md:col-span-2 md:row-span-2 p-8 flex flex-col justify-between group overflow-hidden"
+          className="md:col-span-2 md:row-span-2 p-5 md:p-8 flex flex-col justify-between group overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
           <div className="flex flex-col gap-4">
@@ -77,7 +77,7 @@ export function BentoGrid() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.15 }}
-          className="rounded-3xl p-8 bg-neutral-950 text-neutral-50 border border-neutral-800 flex flex-col justify-between overflow-hidden relative group shadow-lg"
+          className="rounded-3xl p-5 md:p-8 bg-neutral-950 text-neutral-50 border border-neutral-800 flex flex-col justify-between overflow-hidden relative group shadow-lg"
         >
           <div className="absolute inset-0 bg-radial from-violet-600/15 via-transparent to-transparent opacity-70 group-hover:scale-110 transition-transform duration-500 pointer-events-none" />
           <div className="flex items-center justify-between z-10">

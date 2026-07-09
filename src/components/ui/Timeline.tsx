@@ -37,7 +37,7 @@ export function Timeline({ items, defaultExpandedId }: TimelineProps) {
             {/* Timeline Indicator Dot */}
             <div
               className={cn(
-                "absolute -left-[31px] md:-left-[47px] top-1.5 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full border transition-all duration-300 z-10",
+                "absolute -left-[32px] md:-left-[50px] top-1.5 flex h-4 w-4 md:h-5 md:w-5 items-center justify-center rounded-full border transition-all duration-300 z-10",
                 isExpanded
                   ? "bg-indigo-600 border-indigo-600 shadow-[0_0_12px_rgba(99,102,241,0.5)]"
                   : "bg-white dark:bg-neutral-950 border-neutral-300 dark:border-neutral-700"

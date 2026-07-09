@@ -72,7 +72,7 @@ export function Hero() {
         </motion.div>
 
         {/* Hero Title */}
-        <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold font-sans tracking-tight text-neutral-900 dark:text-neutral-50 max-w-4xl leading-[1.05]">
+        <h1 className="text-3xl xs:text-5xl sm:text-6xl md:text-8xl font-bold font-sans tracking-tight text-neutral-900 dark:text-neutral-50 max-w-4xl leading-[1.05]">
           {sentence.split(" ").map((word, i) => {
             const isHighlighted = heroContent.highlightWords.some((hWord) =>
               word.toLowerCase().includes(hWord.toLowerCase().replace(/[^a-zA-Z]/g, ""))
@@ -135,11 +135,11 @@ export function Hero() {
         {/* Social Badges */}
         <motion.div
           variants={itemVariants}
-          className="flex items-center justify-center gap-6 mt-8 text-neutral-500 dark:text-neutral-400 text-sm font-sans"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2.5 mt-8 text-neutral-500 dark:text-neutral-400 text-sm font-sans px-4"
         >
           {socialLinks.map((social, idx) => (
             <React.Fragment key={social.platform}>
-              {idx > 0 && <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-800" />}
+              {idx > 0 && <span className="hidden xs:inline-block w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-800" />}
               <a
                 href={social.url}
                 target={social.platform !== "Email" ? "_blank" : undefined}

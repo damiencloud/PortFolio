@@ -39,7 +39,7 @@ export function TechStack() {
   );
 
   return (
-    <section id="skills" className="py-36 overflow-hidden relative z-10 border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-950/20">
+    <section id="skills" className="py-20 md:py-36 overflow-hidden relative z-10 border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-950/20">
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col items-center">
         
         {/* Reusable Section Heading */}

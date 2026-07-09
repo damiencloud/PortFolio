@@ -11,7 +11,7 @@ export function ProjectShowcase() {
   const [activeTab, setActiveTab] = useState<"overview" | "architecture" | "technical">("overview");
 
   return (
-    <section id="projects" className="py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+    <section id="projects" className="py-20 md:py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       
       {/* Reusable Section Heading */}
       <SectionHeading
@@ -56,7 +56,7 @@ export function ProjectShowcase() {
               className="relative w-full max-w-3xl h-full bg-white dark:bg-neutral-950 border-l border-neutral-200 dark:border-neutral-850 shadow-2xl flex flex-col justify-between z-10"
             >
               {/* Drawer Header */}
-              <div className="flex justify-between items-center px-8 py-6 border-b border-neutral-200 dark:border-neutral-900">
+              <div className="flex justify-between items-center px-5 md:px-8 py-5 md:py-6 border-b border-neutral-200 dark:border-neutral-900">
                 <div>
                   <span className="text-[10px] font-semibold text-indigo-500 uppercase tracking-widest">
                     Technical Case Study
@@ -75,7 +75,7 @@ export function ProjectShowcase() {
               </div>
 
               {/* Tabs Navigation */}
-              <div className="flex border-b border-neutral-200 dark:border-neutral-900 px-8 bg-neutral-50/50 dark:bg-neutral-950/20">
+              <div className="flex border-b border-neutral-200 dark:border-neutral-900 px-5 md:px-8 bg-neutral-50/50 dark:bg-neutral-950/20">
                 {(["overview", "architecture", "technical"] as const).map((tab) => (
                   <button
                     key={tab}
@@ -93,7 +93,7 @@ export function ProjectShowcase() {
               </div>
 
               {/* Modal Body / Tab Content */}
-              <div className="flex-1 overflow-y-auto p-8 font-sans">
+              <div className="flex-1 overflow-y-auto p-5 md:p-8 font-sans">
                 {activeTab === "overview" && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -132,7 +132,7 @@ export function ProjectShowcase() {
                       <h4 className="text-sm font-bold uppercase tracking-wider text-neutral-900 dark:text-neutral-100 mb-4">
                         Key Metrics &amp; Achievements
                       </h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 xs:grid-cols-3 gap-3 md:gap-4">
                         {selectedProject.metrics.map((met, mIdx) => (
                           <div
                             key={mIdx}
@@ -236,7 +236,7 @@ export function ProjectShowcase() {
               </div>
 
               {/* Drawer Footer */}
-              <div className="px-8 py-5 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-950/80 backdrop-blur-md">
+              <div className="px-5 md:px-8 py-4 md:py-5 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-950/80 backdrop-blur-md">
                 <a
                   href={selectedProject.githubUrl}
                   target="_blank"

@@ -43,6 +43,18 @@ export function FloatingNavbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock background scroll when mobile menu is active
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   return (
     <>
       {/* Top Border Scroll Progress Indicator */}
@@ -79,7 +91,7 @@ export function FloatingNavbar() {
           </a>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1.5" aria-label="Main Navigation">
+          <nav className="hidden lg:flex items-center gap-1.5" aria-label="Main Navigation">
             {mainNavLinks.map((link) => {
               const isActive = activeSection === link.href.substring(1);
               return (
@@ -125,7 +137,7 @@ export function FloatingNavbar() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-navigation-menu"
-              className="flex md:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-800 dark:text-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="flex lg:hidden p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-800 dark:text-neutral-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -143,7 +155,7 @@ export function FloatingNavbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-lg flex flex-col justify-center p-8 md:hidden"
+            className="fixed inset-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-lg flex flex-col justify-center p-8 lg:hidden"
           >
             <nav className="flex flex-col gap-6 items-center text-center">
               {mainNavLinks.map((link, idx) => (

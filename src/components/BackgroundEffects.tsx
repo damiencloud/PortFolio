@@ -10,9 +10,11 @@ export function BackgroundEffects() {
   const spotlightY = useSpring(mouseY, springConfig);
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
     
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
@@ -33,7 +35,7 @@ export function BackgroundEffects() {
       <div className="absolute inset-0 filter blur-[120px] opacity-45 dark:opacity-40 transition-opacity duration-1000">
         {/* Blob 1: Indigo */}
         <motion.div
-          animate={{
+          animate={isMobile ? undefined : {
             x: [0, 80, -40, 0],
             y: [0, -60, 90, 0],
             scale: [1, 1.2, 0.9, 1],
@@ -48,7 +50,7 @@ export function BackgroundEffects() {
 
         {/* Blob 2: Cyan */}
         <motion.div
-          animate={{
+          animate={isMobile ? undefined : {
             x: [0, -90, 60, 0],
             y: [0, 80, -60, 0],
             scale: [1, 0.85, 1.15, 1],
@@ -63,7 +65,7 @@ export function BackgroundEffects() {
 
         {/* Blob 3: Violet/Magenta */}
         <motion.div
-          animate={{
+          animate={isMobile ? undefined : {
             x: [0, 50, -60, 0],
             y: [0, 80, -50, 0],
             scale: [1, 1.1, 0.8, 1],
@@ -77,16 +79,16 @@ export function BackgroundEffects() {
         />
       </div>
 
-
-
-      {/* Mouse Following Spotlight Glow (Hardware-accelerated) */}
-      <motion.div
-        className="absolute w-[800px] h-[800px] rounded-full bg-radial from-indigo-500/6 via-violet-500/2 to-transparent pointer-events-none -translate-x-1/2 -translate-y-1/2 dark:from-indigo-500/8 dark:via-cyan-500/3"
-        style={{
-          left: spotlightX,
-          top: spotlightY,
-        }}
-      />
+      {/* Mouse Following Spotlight Glow (Hardware-accelerated) - Hidden on Mobile */}
+      {!isMobile && (
+        <motion.div
+          className="absolute w-[800px] h-[800px] rounded-full bg-radial from-indigo-500/6 via-violet-500/2 to-transparent pointer-events-none -translate-x-1/2 -translate-y-1/2 dark:from-indigo-500/8 dark:via-cyan-500/3"
+          style={{
+            left: spotlightX,
+            top: spotlightY,
+          }}
+        />
+      )}
     </div>
   );
 }

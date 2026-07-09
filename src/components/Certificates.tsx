@@ -5,7 +5,7 @@ import { CertificateCard } from "@/components/ui/CertificateCard";
 
 export function Certificates() {
   return (
-    <section id="education" className="py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+    <section id="education" className="py-20 md:py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       
       {/* Reusable Section Heading */}
       <SectionHeading
