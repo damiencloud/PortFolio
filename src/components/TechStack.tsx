@@ -4,7 +4,7 @@ import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
 import { skills, skillCategories, marqueeSkillsRow1, marqueeSkillsRow2 } from "@/content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { GlassCard } from "@/components/ui/GlassCard";
+import { TechButton } from "@/components/ui/TechButton";
 
 // Helper to render category icon
 function CategoryIcon({ name, size = 14 }: { name: string; size?: number }) {
@@ -12,6 +12,24 @@ function CategoryIcon({ name, size = 14 }: { name: string; size?: number }) {
   if (!IconComponent) return null;
   return <IconComponent size={size} />;
 }
+
+// Meta mapping for skills buttons
+const skillMetaLookup: { [key: string]: { iconName: string; tooltipText: string; glowColor: string } } = {
+  "Python": { iconName: "Code2", tooltipText: "Scripting, virtual mic routing & data parsers", glowColor: "rgba(59,130,246,0.3)" },
+  "JavaScript": { iconName: "Cpu", tooltipText: "Dynamic scripts & async WebSocket pairing", glowColor: "rgba(234,179,8,0.3)" },
+  "HTML & CSS": { iconName: "Layout", tooltipText: "Modern layout structures & CSS transitions", glowColor: "rgba(249,115,22,0.3)" },
+  "SQL": { iconName: "Database", tooltipText: "Structured queries & relational constraints", glowColor: "rgba(14,165,233,0.3)" },
+  "React.js": { iconName: "Globe", tooltipText: "Component state hooks & virtual DOM layouts", glowColor: "rgba(6,182,212,0.3)" },
+  "Next.js": { iconName: "Globe", tooltipText: "Server-side rendering, ISR & API middleware", glowColor: "rgba(120,120,120,0.3)" },
+  "Tailwind CSS": { iconName: "Layout", tooltipText: "Utility class templates & theme variables", glowColor: "rgba(56,189,248,0.3)" },
+  "Django": { iconName: "Server", tooltipText: "MVC architecture, security layers & dashboards", glowColor: "rgba(16,185,129,0.3)" },
+  "PostgreSQL": { iconName: "Database", tooltipText: "Scalable relational engines & JSON indexes", glowColor: "rgba(29,78,216,0.3)" },
+  "SQLite": { iconName: "Database", tooltipText: "Embedded audio caching & local settings storage", glowColor: "rgba(14,165,233,0.3)" },
+  "Supabase": { iconName: "Database", tooltipText: "OAuth sessions & row-level security (RLS) tables", glowColor: "rgba(52,211,153,0.3)" },
+  "AWS (Lightsail, EC2)": { iconName: "Cloud", tooltipText: "Scalable virtual cloud compute instances", glowColor: "rgba(245,158,11,0.3)" },
+  "Git & GitHub": { iconName: "GitBranch", tooltipText: "Distributed source history & branching states", glowColor: "rgba(120,120,120,0.3)" },
+  "Github Actions": { iconName: "Terminal", tooltipText: "Automated compiler checks & CI/CD build scripts", glowColor: "rgba(79,70,229,0.3)" }
+};
 
 export function TechStack() {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -87,44 +105,36 @@ export function TechStack() {
           })}
         </div>
 
-        {/* Skill Progress List */}
-        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tactile Magnetic Buttons Grid */}
+        <div className="w-full max-w-4xl flex flex-wrap justify-center gap-4">
           <AnimatePresence mode="popLayout">
-            {filteredSkills.map((skill) => (
-              <GlassCard
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                key={skill.name}
-                className="p-5 flex flex-col gap-3 group"
-              >
-                <div className="flex justify-between items-center text-sm font-semibold font-sans text-neutral-800 dark:text-neutral-100">
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">
-                    {skill.name}
-                  </span>
-                  <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono">
-                    {skill.level}%
-                  </span>
-                </div>
-                
-                {/* Custom Gradient Progress Bar */}
-                <div className="w-full h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-900 overflow-hidden relative">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.level}%` }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={cn("h-full rounded-full bg-gradient-to-r", skill.color)}
+            {filteredSkills.map((skill) => {
+              const meta = skillMetaLookup[skill.name] || { iconName: "Cpu", tooltipText: `${skill.level}% proficiency`, glowColor: "rgba(99,102,241,0.2)" };
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  key={skill.name}
+                >
+                  <TechButton
+                    name={skill.name}
+                    category={skill.category}
+                    iconName={meta.iconName}
+                    colorClass={skill.color}
+                    glowColor={meta.glowColor}
+                    tooltipText={meta.tooltipText}
                   />
-                </div>
-              </GlassCard>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       </div>
     </section>
   );
 }
+
 export default TechStack;

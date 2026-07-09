@@ -2,6 +2,7 @@ import React from "react";
 import { Hero } from "@/components/Hero";
 import { BentoGrid } from "@/components/BentoGrid";
 import { TechStack } from "@/components/TechStack";
+import { InteractiveKeyboard } from "@/components/InteractiveKeyboard";
 import { ProjectShowcase } from "@/components/ProjectShowcase";
 import { ExperienceTimeline } from "@/components/ExperienceTimeline";
 import { Certificates } from "@/components/Certificates";
@@ -43,6 +44,9 @@ export default function Home() {
 
         {/* Tech Skill sets (Skills) */}
         <TechStack />
+
+        {/* Interactive 3D Keyboard */}
+        <InteractiveKeyboard />
 
         {/* Case Studies (Projects) */}
         <ProjectShowcase />
