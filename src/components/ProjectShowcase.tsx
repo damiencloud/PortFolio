@@ -11,7 +11,7 @@ export function ProjectShowcase() {
   const [activeTab, setActiveTab] = useState<"overview" | "architecture" | "technical">("overview");
 
   return (
-    <section id="projects" className="py-24 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
+    <section id="projects" className="py-36 px-6 md:px-12 max-w-7xl mx-auto relative z-10">
       
       {/* Reusable Section Heading */}
       <SectionHeading

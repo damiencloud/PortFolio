@@ -28,7 +28,7 @@ export function BentoGrid() {
   const latestEducation = educationList[0];
 
   return (
-    <section id="about" className="py-24 px-6 md:px-12 max-w-7xl mx-auto z-10 relative">
+    <section id="about" className="py-36 px-6 md:px-12 max-w-7xl mx-auto z-10 relative">
       {/* Reusable Section Heading */}
       <SectionHeading
         label={aboutContent.sectionLabel}

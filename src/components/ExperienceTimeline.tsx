@@ -16,7 +16,7 @@ export function ExperienceTimeline() {
   }));
 
   return (
-    <section id="experience" className="py-24 px-6 md:px-12 max-w-5xl mx-auto relative z-10">
+    <section id="experience" className="py-36 px-6 md:px-12 max-w-5xl mx-auto relative z-10">
       
       {/* Reusable Section Heading */}
       <SectionHeading
