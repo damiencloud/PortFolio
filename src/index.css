@@ -69,6 +69,14 @@
 /* LIGHT MODE */
 /* LIGHT MODE */
 :root {
+  --primary-btn-bg: hsl(var(--foreground));
+  --primary-btn-text: hsl(var(--background));
+  --primary-btn-shimmer: rgba(255, 255, 255, 0.5);
+
+  --secondary-btn-bg: rgba(0, 0, 0, 0.02);
+  --secondary-btn-text: hsl(var(--foreground));
+  --secondary-btn-shimmer: rgba(99, 102, 241, 0.4);
+
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
 
@@ -188,6 +196,10 @@
 }
 
 .dark {
+  --primary-btn-shimmer: rgba(0, 0, 0, 0.4);
+
+  --secondary-btn-bg: rgba(255, 255, 255, 0.02);
+
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
 
@@ -478,4 +490,29 @@ html.lenis, html.lenis body {
 ::selection {
   background-color: rgba(99, 102, 241, 0.25);
   color: inherit;
-}
+}
+
+/* SHIMMER BUTTON ANIMATIONS */
+@keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+  }
+}
+
+@keyframes spin-around {
+  0% {
+    transform: translate(0) rotate(0deg);
+  }
+  100% {
+    transform: translate(0) rotate(360deg);
+  }
+}
+
+.animate-shimmer-slide {
+  animation: shimmer-slide var(--speed, 3s) infinite linear;
+}
+
+.animate-spin-around {
+  animation: spin-around calc(var(--speed, 3s) * 2) infinite linear;
+}
+

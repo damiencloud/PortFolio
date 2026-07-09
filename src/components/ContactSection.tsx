@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { siteConfig, socialLinks } from "@/content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
 
 // Dynamic Icon rendering
 function ContactIcon({ name, size = 20 }: { name: string; size?: number }) {
@@ -178,14 +179,17 @@ export function ContactSection() {
                 />
               </div>
 
-              <button
+              <ShimmerButton
                 type="submit"
                 disabled={status !== "idle"}
+                borderRadius="0.75rem"
+                background={status === "success" ? "#059669" : "var(--primary-btn-bg)"}
+                shimmerColor={status === "success" ? "#10b981" : "var(--primary-btn-shimmer)"}
                 className={cn(
-                  "mt-2 w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+                  "mt-2 w-full flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
                   status === "success"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-neutral-900 dark:bg-neutral-50 text-neutral-50 dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-60"
+                    ? "text-white"
+                    : "text-[var(--primary-btn-text)]"
                 )}
               >
                 {status === "idle" && (
@@ -201,7 +205,7 @@ export function ContactSection() {
                     <LucideIcons.CheckCircle2 size={16} />
                   </>
                 )}
-              </button>
+              </ShimmerButton>
               {errorText && (
                 <p className="text-xs text-red-500 font-mono text-center mt-2">
                   {errorText}

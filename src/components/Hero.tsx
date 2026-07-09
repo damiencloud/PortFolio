@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { heroContent, socialLinks } from "@/content";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
 
 // Helper to render Lucide Icons dynamically
 function SocialIcon({ name, size = 16 }: { name: string; size?: number }) {
@@ -109,23 +110,26 @@ export function Hero() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center gap-4 mt-4"
         >
-          <a
+          <ShimmerButton
             href={heroContent.primaryCta.href}
-            className="group relative flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold bg-neutral-900 dark:bg-neutral-50 text-neutral-50 dark:text-neutral-950 border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-all duration-300"
+            background="var(--primary-btn-bg)"
+            shimmerColor="var(--primary-btn-shimmer)"
+            borderRadius="9999px"
+            className="group relative flex items-center gap-2 px-7 py-3.5 text-sm font-semibold text-[var(--primary-btn-text)] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:scale-[1.02] transition-all duration-300"
           >
             {heroContent.primaryCta.label}
             <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform duration-300" />
-            
-            {/* Glowing border highlight */}
-            <span className="absolute inset-0 rounded-full border border-indigo-500/30 dark:border-indigo-400/50 scale-100 group-hover:scale-105 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none" />
-          </a>
+          </ShimmerButton>
 
-          <a
+          <ShimmerButton
             href={heroContent.secondaryCta.href}
-            className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-semibold border border-neutral-300 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 bg-white/5 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-all duration-300 backdrop-blur-md"
+            background="var(--secondary-btn-bg)"
+            shimmerColor="var(--secondary-btn-shimmer)"
+            borderRadius="9999px"
+            className="flex items-center gap-2 px-7 py-3.5 text-sm font-semibold border border-neutral-300 dark:border-neutral-850 text-[var(--secondary-btn-text)] hover:scale-[1.02] transition-all duration-300 backdrop-blur-md"
           >
             {heroContent.secondaryCta.label}
-          </a>
+          </ShimmerButton>
         </motion.div>
 
         {/* Social Badges */}

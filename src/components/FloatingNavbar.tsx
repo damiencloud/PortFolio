@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Download, Menu, X } from "lucide-react";
 import { siteConfig, mainNavLinks } from "@/content";
+import { ShimmerButton } from "@/components/ui/ShimmerButton";
 
 export function FloatingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -107,14 +108,17 @@ export function FloatingNavbar() {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
-            <a
+            <ShimmerButton
               href={siteConfig.resumeUrl}
               download
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-neutral-900 dark:bg-neutral-50 text-neutral-50 dark:text-neutral-950 border border-transparent hover:bg-neutral-800 dark:hover:bg-neutral-200 hover-elevate transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              background="var(--primary-btn-bg)"
+              shimmerColor="var(--primary-btn-shimmer)"
+              borderRadius="9999px"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-1.5 text-xs font-semibold text-[var(--primary-btn-text)] border border-transparent hover:scale-[1.02] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             >
               <Download size={13} />
               Resume
-            </a>
+            </ShimmerButton>
 
             {/* Mobile Hamburger Toggle */}
             <button
@@ -160,18 +164,25 @@ export function FloatingNavbar() {
                   {link.label}
                 </motion.a>
               ))}
-              <motion.a
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: mainNavLinks.length * 0.05 }}
-                href={siteConfig.resumeUrl}
-                download
-                onClick={() => setMobileMenuOpen(false)}
-                className="mt-4 flex items-center gap-2 px-6 py-3 rounded-full text-base font-semibold bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all shadow-[0_4px_14px_rgba(99,102,241,0.4)]"
+                className="mt-4 w-full flex justify-center"
               >
-                <Download size={18} />
-                Download Resume
-              </motion.a>
+                <ShimmerButton
+                  href={siteConfig.resumeUrl}
+                  download
+                  onClick={() => setMobileMenuOpen(false)}
+                  background="var(--primary-btn-bg)"
+                  shimmerColor="var(--primary-btn-shimmer)"
+                  borderRadius="9999px"
+                  className="flex items-center gap-2 px-6 py-3 text-base font-semibold text-[var(--primary-btn-text)] shadow-[0_4px_14px_rgba(99,102,241,0.4)] hover:scale-[1.02] transition-all duration-300"
+                >
+                  <Download size={18} />
+                  Download Resume
+                </ShimmerButton>
+              </motion.div>
             </nav>
           </motion.div>
         )}
