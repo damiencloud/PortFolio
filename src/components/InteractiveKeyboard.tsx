@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
+import { gsap } from "gsap";
 import { cn } from "@/lib/utils";
 import { skills } from "@/content";
 import * as LucideIcons from "lucide-react";
@@ -27,14 +28,14 @@ const skillMetaLookup: { [key: string]: { iconName: string; tooltipText: string;
   "HTML & CSS": { iconName: "Layout", tooltipText: "Modern layout structures & CSS transitions", glowColor: "#f97316" },
   "SQL": { iconName: "Database", tooltipText: "Structured queries & relational constraints", glowColor: "#0ea5e9" },
   "React.js": { iconName: "Globe", tooltipText: "Component state hooks & virtual DOM layouts", glowColor: "#06b6d4" },
-  "Next.js": { iconName: "Globe", tooltipText: "Server-side rendering, ISR & API middleware", glowColor: "#64748b" },
+  "Next.js": { iconName: "Globe", tooltipText: "Server-side rendering, ISR & API middleware", glowColor: "#ffffff" },
   "Tailwind CSS": { iconName: "Layout", tooltipText: "Utility class templates & theme variables", glowColor: "#38bdf8" },
   "Django": { iconName: "Server", tooltipText: "MVC architecture, security layers & dashboards", glowColor: "#10b981" },
-  "PostgreSQL": { iconName: "Database", tooltipText: "Scalable relational engines & JSON indexes", glowColor: "#1d4ed8" },
-  "SQLite": { iconName: "Database", tooltipText: "Embedded audio caching & local settings storage", glowColor: "#0ea5e9" },
-  "Supabase": { iconName: "Database", tooltipText: "OAuth sessions & row-level security (RLS) tables", glowColor: "#34d399" },
-  "AWS (Lightsail, EC2)": { iconName: "Cloud", tooltipText: "Scalable virtual cloud compute instances", glowColor: "#f59e0b" },
-  "Git & GitHub": { iconName: "GitBranch", tooltipText: "Distributed source history & branching states", glowColor: "#64748b" },
+  "PostgreSQL": { iconName: "Database", tooltipText: "Scalable relational engines & JSON indexes", glowColor: "#336791" },
+  "SQLite": { iconName: "Database", tooltipText: "Embedded audio caching & local settings storage", glowColor: "#0f80cc" },
+  "Supabase": { iconName: "Database", tooltipText: "OAuth sessions & row-level security (RLS) tables", glowColor: "#3ecf8e" },
+  "AWS (Lightsail, EC2)": { iconName: "Cloud", tooltipText: "Scalable virtual cloud compute instances", glowColor: "#ff9900" },
+  "Git & GitHub": { iconName: "GitBranch", tooltipText: "Distributed source history & branching states", glowColor: "#f05032" },
   "Github Actions": { iconName: "Terminal", tooltipText: "Automated compiler checks & CI/CD build scripts", glowColor: "#4f46e5" }
 };
 
@@ -51,7 +52,7 @@ export function InteractiveKeyboard() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Parse skills.ts and build our interactive keys list automatically
+  // Automatically map skills to physical keyboard legends
   const keyboardSkills: KeySkill[] = skills.map((skill, idx) => {
     const legend = KEY_LEGENDS[idx % KEY_LEGENDS.length];
     const meta = skillMetaLookup[skill.name] || { iconName: "Cpu", tooltipText: `${skill.level}% proficiency`, glowColor: "#6366f1" };
@@ -70,16 +71,14 @@ export function InteractiveKeyboard() {
 
   const [selectedSkill, setSelectedSkill] = useState<KeySkill | null>(null);
   const [hoveredSkill, setHoveredSkill] = useState<KeySkill | null>(null);
-  const [pressedKey, setPressedKey] = useState<string | null>(null);
 
-  // Share layout geometry details with ThreeJS hooks
-  const keySkillsRef = useRef<KeySkill[]>(keyboardSkills);
-  keySkillsRef.current = keyboardSkills;
+  const skillsRef = useRef<KeySkill[]>(keyboardSkills);
+  skillsRef.current = keyboardSkills;
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current) return;
 
-    const currentSkills = keySkillsRef.current;
+    const currentSkills = skillsRef.current;
     const width = canvasRef.current.clientWidth;
     const height = canvasRef.current.clientHeight;
 
@@ -87,36 +86,42 @@ export function InteractiveKeyboard() {
     const scene = new THREE.Scene();
 
     // 2. Camera setup
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 5, 8);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+    camera.position.set(0, 4.8, 7.8);
+    camera.lookAt(0, -0.2, 0);
 
     // 3. Renderer setup
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       antialias: true,
-      alpha: true
+      alpha: true,
+      powerPreference: "high-performance"
     });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // 4. Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    // 4. Studio Lighting & Specular Highlights
+    const ambientLight = new THREE.AmbientLight(0x181825, 1.8); // Deep indigo ambient base
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    dirLight.shadow.bias = -0.001;
-    scene.add(dirLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.5); // Strong highlight key light
+    mainLight.position.set(4, 8, 5);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 1024;
+    mainLight.shadow.mapSize.height = 1024;
+    mainLight.shadow.bias = -0.0005;
+    scene.add(mainLight);
 
-    // Dynamic color spot light that points at the keyboard base
-    const spotLight = new THREE.SpotLight(0x6366f1, 4, 15, Math.PI / 4, 0.5, 1);
-    spotLight.position.set(0, 4, 0);
+    // Subtle blue fill rim light from opposite angle
+    const rimLight = new THREE.DirectionalLight(0x4f46e5, 1.2);
+    rimLight.position.set(-6, 3, -4);
+    scene.add(rimLight);
+
+    // Dynamic keyboard glow spotlight
+    const spotLight = new THREE.SpotLight(0x6366f1, 6, 12, Math.PI / 3, 0.6, 1);
+    spotLight.position.set(0, 5, 0);
     spotLight.castShadow = true;
     scene.add(spotLight);
 
@@ -124,92 +129,290 @@ export function InteractiveKeyboard() {
     const keyboardGroup = new THREE.Group();
     scene.add(keyboardGroup);
 
-    // 5.1 Keyboard Base Frame Deck
+    // 5.1 Geometry dimensions & parameters
     const keySpacingX = 0.95;
     const keySpacingZ = 0.95;
     const rowStagger = [0, 0.15, 0.35, 0.5];
 
-    // Compute bounds to size the keyboard case
     const columnsPerRow = 5;
     const totalRows = Math.ceil(currentSkills.length / columnsPerRow);
     const caseWidth = columnsPerRow * keySpacingX + 0.8;
     const caseDepth = totalRows * keySpacingZ + 0.8;
 
-    const caseGeo = new THREE.BoxGeometry(caseWidth, 0.3, caseDepth);
-    const caseMat = new THREE.MeshStandardMaterial({
-      color: 0x171717, // Charcoal black frame
-      roughness: 0.25,
-      metalness: 0.85
+    // 5.2 Build Case Deck Mesh (MeshPhysicalMaterial with gloss clearcoat lacquer)
+    const caseGeo = new THREE.BoxGeometry(caseWidth, 0.35, caseDepth);
+    const caseMat = new THREE.MeshPhysicalMaterial({
+      color: 0x181822, // Dark anodized base
+      roughness: 0.22,
+      metalness: 0.85,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.18
     });
     const caseMesh = new THREE.Mesh(caseGeo, caseMat);
-    caseMesh.position.y = -0.05;
+    caseMesh.position.y = -0.08;
     caseMesh.receiveShadow = true;
     caseMesh.castShadow = true;
     keyboardGroup.add(caseMesh);
 
-    // Subtle aluminum accent frame rim
-    const rimGeo = new THREE.BoxGeometry(caseWidth + 0.05, 0.1, caseDepth + 0.05);
-    const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x4f46e5, // Anodized indigo rim
-      roughness: 0.1,
-      metalness: 0.9
-    });
-    const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-    rimMesh.position.y = 0.06;
-    keyboardGroup.add(rimMesh);
+    // Dynamic power status led indicator
+    const ledGeo = new THREE.SphereGeometry(0.04, 16, 16);
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0x10b981 }); // Green indicator
+    const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+    ledMesh.position.set(caseWidth / 2 - 0.3, 0.12, -caseDepth / 2 + 0.3);
+    keyboardGroup.add(ledMesh);
 
-    // Status LED Lights
-    const ledGeo = new THREE.SphereGeometry(0.04, 8, 8);
-    const ledOffMat = new THREE.MeshBasicMaterial({ color: 0x22c55e }); // Power LED (Green)
-    const ledMesh1 = new THREE.Mesh(ledGeo, ledOffMat);
-    ledMesh1.position.set(caseWidth / 2 - 0.4, 0.16, -caseDepth / 2 + 0.3);
-    keyboardGroup.add(ledMesh1);
-
-    // Dynamic Input LED (blinks/lights on hover/keypress)
-    const ledOnMat = new THREE.MeshBasicMaterial({ color: 0x3f3f46 }); // Keypress LED
-    const ledMesh2 = new THREE.Mesh(ledGeo, ledOnMat);
-    ledMesh2.position.set(caseWidth / 2 - 0.25, 0.16, -caseDepth / 2 + 0.3);
-    keyboardGroup.add(ledMesh2);
-
-    // 5.2 Helper to generate key textures programmatically
+    // 5.3 Helper to generate crisp Canvas textures dynamically
     const keyTextures: { [key: string]: THREE.CanvasTexture } = {};
     const keyHoverTextures: { [key: string]: THREE.CanvasTexture } = {};
 
+    // Dynamic brand logo drawing method on texture map
+    const drawTechLogo = (ctx: CanvasRenderingContext2D, name: string, cx: number, cy: number, size: number) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+      const r = size / 2;
+
+      switch (name.toLowerCase()) {
+        case "react.js":
+        case "react": {
+          ctx.strokeStyle = "#61dafb";
+          ctx.lineWidth = 3.5;
+          ctx.fillStyle = "#61dafb";
+          
+          ctx.beginPath();
+          ctx.arc(0, 0, 8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r, r * 0.35, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r, r * 0.35, Math.PI / 3, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r, r * 0.35, -Math.PI / 3, 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        }
+        case "typescript": {
+          ctx.fillStyle = "#3178c6";
+          ctx.fillRect(-r, -r, size, size);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 32px sans-serif";
+          ctx.textAlign = "right";
+          ctx.textBaseline = "bottom";
+          ctx.fillText("TS", r - 4, r - 4);
+          break;
+        }
+        case "javascript": {
+          ctx.fillStyle = "#f7df1e";
+          ctx.fillRect(-r, -r, size, size);
+          ctx.fillStyle = "#000000";
+          ctx.font = "bold 32px sans-serif";
+          ctx.textAlign = "right";
+          ctx.textBaseline = "bottom";
+          ctx.fillText("JS", r - 4, r - 4);
+          break;
+        }
+        case "html & css":
+        case "html": {
+          ctx.fillStyle = "#e34f26";
+          ctx.beginPath();
+          ctx.moveTo(0, -r);
+          ctx.lineTo(r * 0.85, -r * 0.7);
+          ctx.lineTo(r * 0.7, r * 0.75);
+          ctx.lineTo(0, r);
+          ctx.lineTo(-r * 0.7, r * 0.75);
+          ctx.lineTo(-r * 0.85, -r * 0.7);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 26px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("5", 0, 2);
+          break;
+        }
+        case "sql": {
+          ctx.strokeStyle = "#00bcff";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.ellipse(0, -r * 0.4, r * 0.8, r * 0.3, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r * 0.8, r * 0.3, 0, 0, Math.PI);
+          ctx.moveTo(-r * 0.8, -r * 0.4);
+          ctx.lineTo(-r * 0.8, 0);
+          ctx.moveTo(r * 0.8, -r * 0.4);
+          ctx.lineTo(r * 0.8, 0);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.ellipse(0, r * 0.4, r * 0.8, r * 0.3, 0, 0, Math.PI);
+          ctx.moveTo(-r * 0.8, 0);
+          ctx.lineTo(-r * 0.8, r * 0.4);
+          ctx.moveTo(r * 0.8, 0);
+          ctx.lineTo(r * 0.8, r * 0.4);
+          ctx.stroke();
+          break;
+        }
+        case "next.js":
+        case "nextjs": {
+          ctx.fillStyle = "#000000";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 3.5;
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 28px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("N", -2, 0);
+          break;
+        }
+        case "tailwind css":
+        case "tailwind": {
+          ctx.fillStyle = "#38bdf8";
+          ctx.font = "bold 24px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("TW", 0, 0);
+          break;
+        }
+        case "django": {
+          ctx.fillStyle = "#092e20";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 32px serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("d", -2, -2);
+          break;
+        }
+        case "postgresql": {
+          ctx.fillStyle = "#336791";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 26px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("PG", 0, 0);
+          break;
+        }
+        case "sqlite": {
+          ctx.fillStyle = "#0f80cc";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, r * 0.8, r * 0.45, Math.PI / 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 15px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("lite", 0, 0);
+          break;
+        }
+        case "supabase": {
+          ctx.fillStyle = "#3ecf8e";
+          ctx.font = "bold 28px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("⚡", 0, 0);
+          break;
+        }
+        case "aws (lightsail, ec2)":
+        case "aws": {
+          ctx.fillStyle = "#ff9900";
+          ctx.font = "bold 18px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("AWS", 0, -4);
+          ctx.beginPath();
+          ctx.arc(0, 6, r * 0.4, 0.2, Math.PI - 0.2);
+          ctx.strokeStyle = "#ff9900";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          break;
+        }
+        case "git & github":
+        case "git": {
+          ctx.fillStyle = "#f05032";
+          ctx.rotate(Math.PI / 4);
+          ctx.fillRect(-r * 0.7, -r * 0.7, r * 1.4, r * 1.4);
+          ctx.rotate(-Math.PI / 4);
+          
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          break;
+        }
+        case "github actions": {
+          ctx.fillStyle = "#24292e";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#4f46e5";
+          ctx.font = "bold 20px monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(">_", 0, 0);
+          break;
+        }
+        default: {
+          ctx.fillStyle = "#6366f1";
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 20px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(name.substring(0, 2).toUpperCase(), 0, 0);
+          break;
+        }
+      }
+      ctx.restore();
+    };
+
     const generateKeyTexture = (legend: string, name: string, isHovered: boolean) => {
       const canvas = document.createElement("canvas");
-      canvas.width = 128;
-      canvas.height = 128;
+      canvas.width = 256;
+      canvas.height = 256;
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
 
-      // Solid color base
-      ctx.fillStyle = isHovered ? "#2a2b3d" : "#18181b"; // Dark gray keycaps
-      ctx.fillRect(0, 0, 128, 128);
+      // Base background color
+      ctx.fillStyle = isHovered ? "#232433" : "#13131a";
+      ctx.fillRect(0, 0, 256, 256);
 
-      // Keycap border outline
-      ctx.strokeStyle = isHovered ? "#6366f1" : "#3f3f46";
-      ctx.lineWidth = isHovered ? 8 : 4;
-      ctx.strokeRect(4, 4, 120, 120);
+      // Keycap border outline rim
+      ctx.strokeStyle = isHovered ? "#6366f1" : "#2a2b3d";
+      ctx.lineWidth = isHovered ? 14 : 6;
+      ctx.strokeRect(7, 7, 242, 242);
 
-      // Draw Key Legend (e.g. Q)
-      ctx.font = "bold 24px monospace";
-      ctx.fillStyle = isHovered ? "#818cf8" : "#a1a1aa";
-      ctx.fillText(legend, 15, 32);
+      // Mapped Legend Legend in top-left
+      ctx.font = "bold 32px monospace";
+      ctx.fillStyle = isHovered ? "#818cf8" : "#71717a";
+      ctx.fillText(legend, 30, 60);
 
-      // Draw Skill Label (e.g. React)
-      ctx.font = "bold 16px sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      
-      const displayName = name.split(" ")[0]; // Take first word for space
-      ctx.fillText(displayName, 64, 82);
+      // Center logo drawing
+      drawTechLogo(ctx, name, 128, 140, 76);
 
       const texture = new THREE.CanvasTexture(canvas);
       texture.colorSpace = THREE.SRGBColorSpace;
       return texture;
     };
 
-    // Pre-generate textures for performance
     currentSkills.forEach((skill) => {
       const normalTex = generateKeyTexture(skill.legend, skill.name, false);
       const hoverTex = generateKeyTexture(skill.legend, skill.name, true);
@@ -217,81 +420,109 @@ export function InteractiveKeyboard() {
       if (hoverTex) keyHoverTextures[skill.key] = hoverTex;
     });
 
-    // 5.3 Generate Keycap Meshes
+    // 5.4 Rounded keycap shapes generator using Shape extrusion
+    const createKeycapGeometry = () => {
+      const w = 0.72;
+      const d = 0.72;
+      const radius = 0.15; // rounded corner radius
+
+      const shape = new THREE.Shape();
+      shape.moveTo(-w / 2 + radius, -d / 2);
+      shape.lineTo(w / 2 - radius, -d / 2);
+      shape.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + radius);
+      shape.lineTo(w / 2, d / 2 - radius);
+      shape.quadraticCurveTo(w / 2, d / 2, w / 2 - radius, d / 2);
+      shape.lineTo(-w / 2 + radius, d / 2);
+      shape.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - radius);
+      shape.lineTo(-w / 2, -d / 2 + radius);
+      shape.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + radius, -d / 2);
+
+      const extrudeSettings = {
+        steps: 1,
+        depth: 0.16,
+        bevelEnabled: true,
+        bevelThickness: 0.08,
+        bevelSize: 0.06,
+        bevelOffset: -0.015,
+        bevelSegments: 6
+      };
+
+      const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      geo.center();
+      geo.rotateX(-Math.PI / 2); // Orient upwards
+      return geo;
+    };
+
+    const capGeo = createKeycapGeometry();
+
+    // 5.5 Generate Keycap meshes and register GSAP springs
     const keycaps: {
       mesh: THREE.Group;
       skill: KeySkill;
       restY: number;
       targetY: number;
-      currentY: number;
+      glowRing: THREE.Mesh;
     }[] = [];
 
-    // Create bevel shapes for mechanical profile
-    const capBottomGeo = new THREE.BoxGeometry(0.75, 0.15, 0.75);
-    const capTopGeo = new THREE.BoxGeometry(0.64, 0.15, 0.64);
+    // Underglow ring geometries for beautiful ambient reflections
+    const glowGeo = new THREE.RingGeometry(0.38, 0.44, 24);
 
     currentSkills.forEach((skill, idx) => {
       const row = Math.floor(idx / columnsPerRow);
       const col = idx % columnsPerRow;
 
-      // Key Positioning coordinates (centered on base frame)
       const stagger = rowStagger[row] || 0;
-      const xOffset = -((columnsPerRow - 1) * keySpacingX) / 2 + stagger - 0.1;
-      const zOffset = -((totalRows - 1) * keySpacingZ) / 2;
+      const posX = -((columnsPerRow - 1) * keySpacingX) / 2 + stagger + col * keySpacingX - 0.1;
+      const posZ = -((totalRows - 1) * keySpacingZ) / 2 + row * keySpacingZ;
+      const posY = 0.2;
 
-      const posX = xOffset + col * keySpacingX;
-      const posZ = zOffset + row * keySpacingZ;
-      const posY = 0.22; // Rests above case
-
-      // Key Group (binds meshes together)
       const capGroup = new THREE.Group();
       capGroup.position.set(posX, posY, posZ);
       keyboardGroup.add(capGroup);
 
-      // Bottom half keycap stem
-      const bottomMat = new THREE.MeshStandardMaterial({
-        color: 0x27272a,
-        roughness: 0.5,
-        metalness: 0.1
+      // Dynamic glow ring below the keycap
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(skill.glow),
+        transparent: true,
+        opacity: 0,
+        side: THREE.DoubleSide
       });
-      const bottomMesh = new THREE.Mesh(capBottomGeo, bottomMat);
-      bottomMesh.position.y = -0.055;
-      bottomMesh.castShadow = true;
-      bottomMesh.receiveShadow = true;
-      capGroup.add(bottomMesh);
+      const glowMesh = new THREE.Mesh(glowGeo, glowMat);
+      glowMesh.rotation.x = -Math.PI / 2;
+      glowMesh.position.y = -0.075; // Sits flat on the case deck
+      capGroup.add(glowMesh);
 
-      // Top face keycap lid (holds dynamic text canvas texture on top face)
-      const topTex = keyTextures[skill.key];
+      // Top face dynamic canvas texture material
+      const normalTex = keyTextures[skill.key];
       const faceMaterials = [
-        new THREE.MeshStandardMaterial({ color: 0x27272a }), // Right
-        new THREE.MeshStandardMaterial({ color: 0x27272a }), // Left
-        new THREE.MeshStandardMaterial({ map: topTex }),      // Top face text
-        new THREE.MeshStandardMaterial({ color: 0x27272a }), // Bottom
-        new THREE.MeshStandardMaterial({ color: 0x27272a }), // Front
-        new THREE.MeshStandardMaterial({ color: 0x27272a })  // Back
+        new THREE.MeshPhysicalMaterial({ color: 0x1a1a24, roughness: 0.15, metalness: 0.1, clearcoat: 0.9, clearcoatRoughness: 0.1 }), // Side panels
+        new THREE.MeshPhysicalMaterial({ map: normalTex, roughness: 0.12, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.08 }) // Top face map
       ];
-      const topMesh = new THREE.Mesh(capTopGeo, faceMaterials);
-      topMesh.position.y = 0.045;
-      topMesh.castShadow = true;
-      topMesh.receiveShadow = true;
-      capGroup.add(topMesh);
 
-      // Register keycap variables
+      // Assign materials
+      const capMesh = new THREE.Mesh(capGeo, faceMaterials);
+      
+      // Assign material index for top faces
+      const position = capGeo.attributes.position;
+      const groups = capGeo.groups;
+      capMesh.castShadow = true;
+      capMesh.receiveShadow = true;
+      capGroup.add(capMesh);
+
       keycaps.push({
         mesh: capGroup,
         skill: skill,
         restY: posY,
         targetY: posY,
-        currentY: posY
+        glowRing: glowMesh
       });
     });
 
-    // 6. Raycasting & Mouse move hooks
+    // 6. Camera Tilt & Raycasting Interaction
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2(-999, -999); // Offscreen start
+    const mouse = new THREE.Vector2(-999, -999);
 
-    // Target rotation angles for spatial tilt
-    let targetRotX = 0.18; // Default resting camera angle
+    let targetRotX = 0.18;
     let targetRotY = -0.08;
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -300,9 +531,9 @@ export function InteractiveKeyboard() {
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       mouse.set(x, y);
 
-      // Gentle keyboard tilt response matching cursor
-      targetRotX = 0.18 - y * 0.18;
-      targetRotY = -0.08 + x * 0.22;
+      // Natural tilt and lighting direction changes
+      targetRotX = 0.18 - y * 0.2;
+      targetRotY = -0.08 + x * 0.24;
     };
 
     const handleMouseLeave = () => {
@@ -313,12 +544,10 @@ export function InteractiveKeyboard() {
     };
 
     const handleCanvasClick = () => {
-      // Find hovered keycap to select
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(keyboardGroup.children, true);
-      
+
       if (intersects.length > 0) {
-        // Find which group was hit
         let hitGroup: THREE.Object3D | null = intersects[0].object;
         while (hitGroup && hitGroup.parent !== keyboardGroup) {
           hitGroup = hitGroup.parent;
@@ -328,46 +557,54 @@ export function InteractiveKeyboard() {
           const cap = keycaps.find((k) => k.mesh === hitGroup);
           if (cap) {
             setSelectedSkill(cap.skill);
-            setPressedKey(cap.skill.key);
 
-            // Depress animation trigger
-            cap.targetY = cap.restY - 0.09;
-            setTimeout(() => {
-              cap.targetY = cap.restY;
-              setPressedKey(null);
-            }, 180);
+            // Play premium spring rebound click animation with GSAP
+            const tl = gsap.timeline();
+            tl.to(cap.mesh.position, {
+              y: cap.restY - 0.08, // Depress down
+              duration: 0.08,
+              ease: "power2.out"
+            }).to(cap.mesh.position, {
+              y: cap.restY + 0.12, // Rebound spring bounce back up
+              duration: 0.35,
+              ease: "elastic.out(1, 0.4)"
+            });
+
+            // LED pulse status
+            gsap.to(ledMesh.position, { y: 0.15, duration: 0.05, yoyo: true, repeat: 1 });
           }
         }
       }
     };
 
-    // Bind event listeners to renderer canvas
     const dom = renderer.domElement;
     dom.addEventListener("mousemove", handleMouseMove);
     dom.addEventListener("mouseleave", handleMouseLeave);
     dom.addEventListener("click", handleCanvasClick);
 
-    // 7. Bind Physical Keyboard keystrokes to depress animations
+    // 7. Physical keyboard bindings with GSAP Springs
     const handlePhysicalKeyDown = (e: KeyboardEvent) => {
-      // Avoid firing when typing in forms
       if (
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA"
       ) {
         return;
       }
-      
+
       const key = e.key.toLowerCase();
       const cap = keycaps.find((k) => k.skill.key === key);
       if (cap) {
         setSelectedSkill(cap.skill);
-        setPressedKey(cap.skill.key);
-        cap.targetY = cap.restY - 0.09;
+        gsap.killTweensOf(cap.mesh.position);
+        gsap.to(cap.mesh.position, {
+          y: cap.restY - 0.08,
+          duration: 0.08,
+          ease: "power2.out"
+        });
         
-        // Spot light intensity boost and color shift on keypress
+        // Spot light color track glow
         spotLight.color.setHex(parseInt(cap.skill.glow.replace("#", "0x")));
         spotLight.intensity = 8;
-        ledMesh2.material = new THREE.MeshBasicMaterial({ color: 0x6366f1 });
       }
     };
 
@@ -375,21 +612,23 @@ export function InteractiveKeyboard() {
       const key = e.key.toLowerCase();
       const cap = keycaps.find((k) => k.skill.key === key);
       if (cap) {
-        cap.targetY = cap.restY;
-        setPressedKey(null);
-        spotLight.intensity = 4;
-        ledMesh2.material = new THREE.MeshBasicMaterial({ color: 0x3f3f46 });
+        gsap.killTweensOf(cap.mesh.position);
+        gsap.to(cap.mesh.position, {
+          y: cap.restY,
+          duration: 0.4,
+          ease: "elastic.out(1, 0.5)" // Spring bounce
+        });
+        spotLight.intensity = 6;
       }
     };
 
     window.addEventListener("keydown", handlePhysicalKeyDown);
     window.addEventListener("keyup", handlePhysicalKeyUp);
 
-    // 8. Dynamic resize handler
+    // 8. Resize handler
     const handleResize = () => {
       if (!canvasRef.current || !containerRef.current) return;
       const w = containerRef.current.clientWidth;
-      // Keep height relative
       const h = containerRef.current.clientHeight;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -397,29 +636,33 @@ export function InteractiveKeyboard() {
     };
     window.addEventListener("resize", handleResize);
 
-    // 9. Animation Loop
+    // 9. Animation loop with GSAP spring updates
     let animationFrameId: number;
     const clock = new THREE.Clock();
+    let lastHoveredCap: typeof keycaps[0] | null = null;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
       const time = clock.getElapsedTime();
 
-      // Keyboard case float rotation animation (slow sinusoidal float)
-      keyboardGroup.position.y = Math.sin(time * 1.2) * 0.06;
+      // Keyboard slow floating rotation matching reference appearance
+      keyboardGroup.position.y = Math.sin(time * 1.3) * 0.06;
+
+      // Subtly rotate directional light to change specular highlights naturally
+      mainLight.position.x = 4 + Math.sin(time * 0.5) * 1.5;
+      mainLight.position.z = 5 + Math.cos(time * 0.5) * 1.5;
 
       // Smooth camera tilt lerp
       keyboardGroup.rotation.x += (targetRotX - keyboardGroup.rotation.x) * 0.08;
       keyboardGroup.rotation.y += (targetRotY - keyboardGroup.rotation.y) * 0.08;
 
-      // Raycast hover detection
+      // Raycaster collision checking
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(keyboardGroup.children, true);
 
       let currentHoveredCap: typeof keycaps[0] | null = null;
       if (intersects.length > 0) {
-        // Find main keycap group
         let hitGroup: THREE.Object3D | null = intersects[0].object;
         while (hitGroup && hitGroup.parent !== keyboardGroup) {
           hitGroup = hitGroup.parent;
@@ -432,53 +675,89 @@ export function InteractiveKeyboard() {
         }
       }
 
-      // Update hover visual states and textures dynamically
-      keycaps.forEach((cap) => {
-        const isHovered = currentHoveredCap === cap;
-        const isKeyPressed = pressedKey === cap.skill.key;
+      // Switch textures and trigger spring lift on hover change
+      if (currentHoveredCap !== lastHoveredCap) {
+        // Reset previous hovered keycap
+        if (lastHoveredCap) {
+          const prevCap = lastHoveredCap;
+          gsap.killTweensOf(prevCap.mesh.position);
+          gsap.killTweensOf(prevCap.mesh.rotation);
+          gsap.killTweensOf(prevCap.glowRing.material);
 
-        // Target heights: Hover shifts keycap up, active/press depresses it
-        if (isKeyPressed) {
-          cap.targetY = cap.restY - 0.09;
-        } else if (isHovered) {
-          cap.targetY = cap.restY + 0.12; // Rise up
-        } else {
-          cap.targetY = cap.restY; // Return to rest
-        }
+          // Spring return to original position
+          gsap.to(prevCap.mesh.position, {
+            y: prevCap.restY,
+            duration: 0.45,
+            ease: "elastic.out(1, 0.55)"
+          });
+          gsap.to(prevCap.mesh.rotation, {
+            x: 0,
+            y: 0,
+            z: 0,
+            duration: 0.35,
+            ease: "power2.out"
+          });
+          gsap.to(prevCap.glowRing.material, {
+            opacity: 0,
+            duration: 0.3,
+            ease: "power1.out"
+          });
 
-        // Interpolate position (smooth spring-like lerping)
-        cap.currentY += (cap.targetY - cap.currentY) * 0.18;
-        cap.mesh.position.y = cap.currentY;
-
-        // Material texture updates based on hover states
-        const topMesh = cap.mesh.children[1] as THREE.Mesh;
-        if (topMesh && Array.isArray(topMesh.material)) {
-          const topMat = topMesh.material[2] as THREE.MeshStandardMaterial;
-          if (topMat) {
-            const currentTex = isHovered ? keyHoverTextures[cap.skill.key] : keyTextures[cap.skill.key];
-            if (topMat.map !== currentTex) {
-              topMat.map = currentTex;
+          // Restore normal face material texture
+          const topMesh = prevCap.mesh.children[2] as THREE.Mesh;
+          if (topMesh && Array.isArray(topMesh.material)) {
+            const topMat = topMesh.material[2] as THREE.MeshPhysicalMaterial;
+            if (topMat) {
+              topMat.map = keyTextures[prevCap.skill.key];
               topMat.needsUpdate = true;
             }
           }
         }
-      });
 
-      // Synchronize states with React for details panel UI
-      if (currentHoveredCap) {
-        if (hoveredSkill?.key !== currentHoveredCap.skill.key) {
-          setHoveredSkill(currentHoveredCap.skill);
-          // Set glow spotlights to skill color
-          spotLight.color.setHex(parseInt(currentHoveredCap.skill.glow.replace("#", "0x")));
-          ledMesh2.material = new THREE.MeshBasicMaterial({ color: 0x6366f1 });
-        }
-        dom.style.cursor = "pointer";
-      } else {
-        if (hoveredSkill !== null) {
+        // Apply visual hover state to new keycap
+        if (currentHoveredCap) {
+          const newCap = currentHoveredCap;
+          gsap.killTweensOf(newCap.mesh.position);
+          gsap.killTweensOf(newCap.mesh.rotation);
+          gsap.killTweensOf(newCap.glowRing.material);
+
+          // Smoothly lift and tilt keycap
+          gsap.to(newCap.mesh.position, {
+            y: newCap.restY + 0.15,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          gsap.to(newCap.mesh.rotation, {
+            x: 0.08,
+            z: -0.06,
+            duration: 0.3,
+            ease: "power2.out"
+          });
+          gsap.to(newCap.glowRing.material, {
+            opacity: 0.85,
+            duration: 0.25,
+            ease: "power1.out"
+          });
+
+          // Swap face materials for hover highlighted texture
+          const topMesh = newCap.mesh.children[2] as THREE.Mesh;
+          if (topMesh && Array.isArray(topMesh.material)) {
+            const topMat = topMesh.material[2] as THREE.MeshPhysicalMaterial;
+            if (topMat) {
+              topMat.map = keyHoverTextures[newCap.skill.key];
+              topMat.needsUpdate = true;
+            }
+          }
+
+          setHoveredSkill(newCap.skill);
+          spotLight.color.setHex(parseInt(newCap.skill.glow.replace("#", "0x")));
+          dom.style.cursor = "pointer";
+        } else {
           setHoveredSkill(null);
-          ledMesh2.material = new THREE.MeshBasicMaterial({ color: 0x3f3f46 });
+          dom.style.cursor = "default";
         }
-        dom.style.cursor = "default";
+
+        lastHoveredCap = currentHoveredCap;
       }
 
       renderer.render(scene, camera);
@@ -486,7 +765,7 @@ export function InteractiveKeyboard() {
 
     animate();
 
-    // 10. Clean up references
+    // 10. Memory clean up on unmount
     return () => {
       cancelAnimationFrame(animationFrameId);
       dom.removeEventListener("mousemove", handleMouseMove);
@@ -496,25 +775,30 @@ export function InteractiveKeyboard() {
       window.removeEventListener("keyup", handlePhysicalKeyUp);
       window.removeEventListener("resize", handleResize);
 
-      // Dispose geometries & materials
       scene.clear();
       renderer.dispose();
+      capGeo.dispose();
+      caseGeo.dispose();
+      ledGeo.dispose();
+      glowGeo.dispose();
+      Object.values(keyTextures).forEach((t) => t.dispose());
+      Object.values(keyHoverTextures).forEach((t) => t.dispose());
     };
   }, []);
 
   return (
     <section className="py-36 px-6 md:px-12 max-w-6xl mx-auto relative z-10">
       <div className="flex flex-col items-center gap-12 text-center">
-        {/* Header Title */}
+        {/* Title */}
         <div>
           <span className="text-xs md:text-sm font-semibold tracking-widest text-indigo-500 uppercase">
-            Tactile Playground
+            Signature Interaction
           </span>
           <h2 className="text-3xl md:text-5xl font-bold font-sans text-neutral-900 dark:text-neutral-50 mt-2">
             Interactive 3D Keyboard
           </h2>
           <p className="text-sm text-neutral-500 dark:text-neutral-450 font-light mt-3 max-w-xl mx-auto">
-            Experience realistic Three.js mechanics. Move your mouse to rotate, hover keycaps to inspect skills, or press physical keys on your keyboard to watch the switches activate.
+            Experience realistic Three.js mechanics with ExtrudeGeometry bevel shapes and MeshPhysicalMaterial reflections. Hover keys to trigger ambient glows or type to activate switches.
           </p>
         </div>
 
@@ -526,7 +810,7 @@ export function InteractiveKeyboard() {
             
             {/* Legend guide */}
             <div className="absolute top-4 left-6 text-[9px] font-mono tracking-wider text-neutral-400 dark:text-neutral-500 uppercase">
-              RENDER_ENGINE: THREE_JS v0.185
+              RENDER_ENGINE: PHYSICAL_SHADERS v0.185
             </div>
 
             <canvas ref={canvasRef} className="h-full w-full block cursor-grab active:cursor-grabbing" />
@@ -574,7 +858,7 @@ export function InteractiveKeyboard() {
                               <DetailIcon name={active.iconName} size={16} />
                             </div>
                             <div>
-                              <h4 className="text-xl font-bold font-sans text-neutral-950 dark:text-neutral-50 leading-tight">
+                              <h4 className="text-xl font-bold font-sans text-neutral-955 dark:text-neutral-50 leading-tight">
                                 {active.name}
                               </h4>
                               <span className="text-[10px] font-semibold text-neutral-450 dark:text-neutral-500 uppercase tracking-widest mt-0.5 block">
@@ -595,7 +879,7 @@ export function InteractiveKeyboard() {
                       </div>
 
                       {/* Terminal config snippet simulation */}
-                      <div className="rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-850 shadow-inner bg-neutral-950 text-neutral-300 p-4 font-mono text-[9px] leading-normal">
+                      <div className="rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-850 shadow-inner bg-neutral-955 text-neutral-300 p-4 font-mono text-[9px] leading-normal">
                         <div className="flex items-center justify-between text-neutral-550 border-b border-neutral-900 pb-1.5 mb-1.5 font-mono">
                           <span>LEGEND_TERMINAL</span>
                           <span>SWITCH_{active.legend}</span>
