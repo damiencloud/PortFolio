@@ -5,7 +5,7 @@ export const aboutContent: AboutContent = {
   sectionTitle: "About Me",
   heading: "Building Responsive Web Apps with AI & Cloud Integration",
   paragraphs: [
-    "I am an Aspiring Full Stack Developer with a strong foundation in Python, JavaScript, and modern frameworks like React, Next.js, and Django. I specialize in building user-centric web platforms, exploring AI integrations, and automating developer workflows.",
+    "I am a Full Stack Developer with a strong foundation in Python, JavaScript, and modern frameworks like React, Next.js, and Django. I specialize in building user-centric web platforms, exploring AI integrations, and automating developer workflows.",
     "Through my academic pursuits in Master of Computer Applications and hands-on experience, I have developed solid capabilities in frontend development, backend API architectures, database management, and cloud systems."
   ],
   metrics: [
