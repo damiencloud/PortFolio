@@ -26,18 +26,24 @@ interface KeySkill {
 const skillMetaLookup: { [key: string]: { iconName: string; tooltipText: string; glowColor: string } } = {
   "Python": { iconName: "Code2", tooltipText: "Backend scripting, automation, and API pipelines", glowColor: "#3776AB" },
   "JavaScript": { iconName: "Cpu", tooltipText: "Interactive client scripts and dynamic behaviors", glowColor: "#F7DF1E" },
-  "HTML & CSS": { iconName: "Layout", tooltipText: "Semantic HTML structures and responsive CSS layouts", glowColor: "#E34F26" },
-  "SQL": { iconName: "Database", tooltipText: "Structured queries and relational schema modeling", glowColor: "#00758F" },
+  "TypeScript": { iconName: "Code2", tooltipText: "Typed superset of JavaScript for scalable app architectures", glowColor: "#3178C6" },
+  "HTML5": { iconName: "Layout", tooltipText: "Semantic HTML structure and documents", glowColor: "#E34F26" },
+  "CSS3": { iconName: "Layout", tooltipText: "Responsive layouts, animations, and typography styling", glowColor: "#1572B6" },
   "React.js": { iconName: "Globe", tooltipText: "Component-based declarative UI structures and hooks", glowColor: "#61DAFB" },
-  "Next.js": { iconName: "Globe", tooltipText: "Full-stack React frame with SSR, ISR, and server actions", glowColor: "#111111" },
+  "Next.js": { iconName: "Globe", tooltipText: "Full-stack React frame with SSR, ISR, and server actions", glowColor: "#ffffff" },
   "Tailwind CSS": { iconName: "Layout", tooltipText: "Utility-first design layouts and CSS compiling", glowColor: "#38BDF8" },
-  "Django": { iconName: "Server", tooltipText: "Batteries-included secure MVC python web services", glowColor: "#092E20" },
+  "Vite": { iconName: "Flame", tooltipText: "Fast modern frontend build tool and dev server", glowColor: "#646CFF" },
+  "Framer Motion": { iconName: "Activity", tooltipText: "Production-ready motion library for React", glowColor: "#F107A3" },
+  "GSAP": { iconName: "Activity", tooltipText: "Professional-grade high-performance JavaScript animations", glowColor: "#88CE02" },
+  "Node.js": { iconName: "Server", tooltipText: "Event-driven asynchronous JavaScript runtime engine", glowColor: "#339933" },
+  "Express": { iconName: "Server", tooltipText: "Minimal and flexible Node.js web application framework", glowColor: "#ffffff" },
   "PostgreSQL": { iconName: "Database", tooltipText: "Scalable relational engine with JSON data support", glowColor: "#336791" },
-  "SQLite": { iconName: "Database", tooltipText: "Lightweight embedded storage for local cache layers", glowColor: "#003B57" },
-  "Supabase": { iconName: "Database", tooltipText: "Real-time backend engine with PostgreSQL database tables", glowColor: "#3ECF8E" },
-  "AWS (Lightsail, EC2)": { iconName: "Cloud", tooltipText: "Elastic compute cloud structures and domain routes", glowColor: "#FF9900" },
-  "Git & GitHub": { iconName: "GitBranch", tooltipText: "Distributed history checks and repository branching", glowColor: "#F05032" },
-  "Github Actions": { iconName: "Terminal", tooltipText: "Continuous integration pipelines and compilation runs", glowColor: "#2088FF" }
+  "MySQL": { iconName: "Database", tooltipText: "Relational database server for web applications", glowColor: "#4479A1" },
+  "MongoDB": { iconName: "Database", tooltipText: "Document-based NoSQL database for modern apps", glowColor: "#47A248" },
+  "Docker": { iconName: "Cpu", tooltipText: "OS-level virtualization with container deployments", glowColor: "#2496ED" },
+  "AWS": { iconName: "Cloud", tooltipText: "Amazon Web Services cloud computing solutions", glowColor: "#FF9900" },
+  "Git": { iconName: "GitBranch", tooltipText: "Distributed version control system for source code", glowColor: "#F05032" },
+  "GitHub": { iconName: "Github", tooltipText: "Cloud repository hosting and developer workflows", glowColor: "#ffffff" }
 };
 
 const KEY_LEGENDS = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M"];
@@ -170,13 +176,24 @@ export function InteractiveKeyboard() {
     let width = canvasRef.current.clientWidth;
     let height = canvasRef.current.clientHeight;
 
+    // Outer-scope variables to prevent Temporal Dead Zone (TDZ) ReferenceErrors in closures
+    const keycaps: {
+      mesh: THREE.Group;
+      skill: KeySkill;
+      restY: number;
+      targetY: number;
+      glowRing: THREE.Mesh;
+    }[] = [];
+    let keyboardGroup: THREE.Group;
+    let activePointLight: THREE.PointLight;
+
     // 1. Scene Setup
     const scene = new THREE.Scene();
 
     // 2. Camera Setup (Ortholinear perspective)
-    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
-    camera.position.set(0, 5.2, 7.8);
-    camera.lookAt(0, -0.2, 0);
+    const camera = new THREE.PerspectiveCamera(28, width / height, 0.1, 100);
+    camera.position.set(0, 7.6, 7.2); // Slightly more top-down angle
+    camera.lookAt(0, -0.4, 0);
 
     // 3. WebGL Renderer with optimized Pixel Ratio
     const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
@@ -190,13 +207,15 @@ export function InteractiveKeyboard() {
     renderer.setPixelRatio(isMobileDevice ? 1.2 : Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.LinearToneMapping; // Ensure tone mapping does not darken logos excessively
+    renderer.toneMappingExposure = 1.35;           // Increase exposure of the scene
 
     // 4. Studio Lighting Configuration
-    const ambientLight = new THREE.AmbientLight(0x1e1e2f, 2.2); // Fill light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.6); // Diffuse ambient light
     scene.add(ambientLight);
 
     // Keylight (directional with shadow casting)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.2);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
     keyLight.position.set(5, 8, 4);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = isMobileDevice ? 512 : 1024;
@@ -210,6 +229,17 @@ export function InteractiveKeyboard() {
     keyLight.shadow.camera.far = 15;
     scene.add(keyLight);
 
+    // Dedicated soft fill light aimed at the keycaps (no shadows, high diffuse)
+    const keycapSoftFillLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keycapSoftFillLight.position.set(0, 10, 5);
+    keycapSoftFillLight.castShadow = false;
+    scene.add(keycapSoftFillLight);
+
+    // Headlight to ensure key faces remain legible from all viewing angles
+    const headLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    headLight.position.set(0, 4, 8);
+    scene.add(headLight);
+
     // Color Fill Light
     const fillLight = new THREE.DirectionalLight(0x818cf8, 1.6);
     fillLight.position.set(-6, 3, 2);
@@ -220,18 +250,26 @@ export function InteractiveKeyboard() {
     rimLight.position.set(0, 4, -8);
     scene.add(rimLight);
 
-    // Spotlight for active glows
-    const spotLight = new THREE.SpotLight(0xffffff, 8, 12, Math.PI / 4, 0.4, 1.2);
-    spotLight.position.set(0, 6, 0);
-    scene.add(spotLight);
-
     // 5. Keyboard Group
-    const keyboardGroup = new THREE.Group();
+    keyboardGroup = new THREE.Group();
     scene.add(keyboardGroup);
 
-    // Key dimensions and spacing
-    const keySpacingX = 0.94;
-    const keySpacingZ = 0.94;
+    // Surface-anchored PointLight for localized hover glows
+    activePointLight = new THREE.PointLight(0xffffff, 0, 2.0, 1.5);
+    activePointLight.position.set(0, 0.4, 0);
+    keyboardGroup.add(activePointLight);
+
+    // Easing targets for surface glow interpolation
+    let activeLightCap: typeof keycaps[0] | null = null;
+    let targetLightX = 0;
+    let targetLightY = 0.4;
+    let targetLightZ = 0;
+    let targetLightIntensity = 0;
+    const targetLightColor = new THREE.Color(0xffffff);
+
+    // Key dimensions and spacing (Ortholinear compact layout)
+    const keySpacingX = 0.82;
+    const keySpacingZ = 0.82;
     const columnsPerRow = 5;
     const totalRows = Math.ceil(currentSkills.length / columnsPerRow);
 
@@ -308,6 +346,7 @@ export function InteractiveKeyboard() {
       cx: number,
       cy: number,
       size: number,
+      brandColor: string,
       isBumpMap: boolean = false
     ) => {
       // Find logo image from preloaded cache
@@ -322,30 +361,79 @@ export function InteractiveKeyboard() {
           aspect = img.width / img.height;
         }
 
-        let drawW = size * 0.95;
-        let drawH = size * 0.95;
-        if (aspect > 1) {
-          drawH = (size * 0.95) / aspect;
-        } else {
-          drawW = (size * 0.95) * aspect;
+        // Apply custom scaling factor to balance square/wide logos and give them consistent padding
+        const lowerName = name.toLowerCase();
+        let scaleFactor = 0.95;
+        if (
+          lowerName === "javascript" ||
+          lowerName === "typescript" ||
+          lowerName === "next.js" ||
+          lowerName.includes("aws") ||
+          lowerName.includes("amazon")
+        ) {
+          scaleFactor = 0.72; // Extra padding for square/bold brand shapes
+        } else if (lowerName === "git" || lowerName === "github" || lowerName === "vite") {
+          scaleFactor = 0.80; // Medium padding for balanced visual layout
         }
 
-        if (isBumpMap) {
-          // Render white silhouette on transparent/black for the bumpmap relief channel
-          const offCanvas = document.createElement("canvas");
-          offCanvas.width = 512;
-          offCanvas.height = 512;
-          const offCtx = offCanvas.getContext("2d");
-          if (offCtx) {
-            offCtx.drawImage(img, 256 - drawW / 2, 256 - drawH / 2, drawW, drawH);
+        let drawW = size * scaleFactor;
+        let drawH = size * scaleFactor;
+        if (aspect > 1) {
+          drawH = (size * scaleFactor) / aspect;
+        } else {
+          drawW = (size * scaleFactor) * aspect;
+        }
+
+        const offCanvas = document.createElement("canvas");
+        offCanvas.width = 1024;
+        offCanvas.height = 1024;
+        const offCtx = offCanvas.getContext("2d");
+        if (offCtx) {
+          offCtx.drawImage(img, 512 - drawW / 2, 512 - drawH / 2, drawW, drawH);
+          
+          if (isBumpMap) {
             offCtx.globalCompositeOperation = "source-in";
             offCtx.fillStyle = "#ffffff";
-            offCtx.fillRect(0, 0, 512, 512);
-            ctx.drawImage(offCanvas, -256, -256);
+            offCtx.fillRect(0, 0, 1024, 1024);
+          } else if (lowerName !== "vite" && lowerName !== "javascript" && lowerName !== "typescript") {
+            // Override colors for silhouette/cutout logos (preserving Vite's, JavaScript's, and TypeScript's official colors/gradients)
+            offCtx.globalCompositeOperation = "source-in";
+            if (lowerName === "next.js" || lowerName === "github" || lowerName === "express" || brandColor === "#ffffff" || brandColor === "#111111" || brandColor === "#000000" || brandColor === "#18181b") {
+              offCtx.fillStyle = "#ffffff";
+            } else {
+              offCtx.fillStyle = brandColor;
+            }
+            offCtx.fillRect(0, 0, 1024, 1024);
           }
-        } else {
-          // Render SVG using official brand colors directly onto the color map
-          ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+          // Render background shapes underneath on the main canvas (only for color map, not bump map)
+          if (!isBumpMap) {
+            if (lowerName === "javascript" || lowerName === "typescript") {
+              // Draw a subtle dark outline around the logo square to give it clean definition
+              ctx.fillStyle = "#0a0a0c";
+              ctx.fillRect(-(drawW + 20) / 2, -(drawH + 20) / 2, drawW + 20, drawH + 20);
+            } else if (lowerName === "next.js") {
+              // Draw a subtle dark outline around the white circle
+              ctx.fillStyle = "#0a0a0c";
+              ctx.beginPath();
+              ctx.arc(0, 0, (drawW + 20) / 2, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Draw solid black base circle so the cutout "N" is black
+              ctx.fillStyle = "#000000";
+              ctx.beginPath();
+              ctx.arc(0, 0, drawW / 2, 0, Math.PI * 2);
+              ctx.fill();
+            } else if (lowerName.includes("html5") || lowerName.includes("css3")) {
+              // Draw a white circle behind the center cutout area of the shield (where 5 or 3 is)
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.arc(0, 8, drawW * 0.32, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          ctx.drawImage(offCanvas, -512, -512);
         }
         ctx.restore();
       }
@@ -356,26 +444,26 @@ export function InteractiveKeyboard() {
 
       // 1. Color Map Canvas
       const colorCanvas = document.createElement("canvas");
-      colorCanvas.width = 512;
-      colorCanvas.height = 512;
+      colorCanvas.width = 1024;
+      colorCanvas.height = 1024;
       const colorCtx = colorCanvas.getContext("2d");
       if (!colorCtx) return null;
 
       // Dark carbon textured keycap top face
       colorCtx.fillStyle = "#1e1e24";
-      colorCtx.fillRect(0, 0, 512, 512);
+      colorCtx.fillRect(0, 0, 1024, 1024);
 
       // Elegant inner border styled with official brand color
       colorCtx.strokeStyle = brandColor;
-      colorCtx.lineWidth = 16;
-      colorCtx.strokeRect(18, 18, 476, 476);
+      colorCtx.lineWidth = 32;
+      colorCtx.strokeRect(36, 36, 952, 952);
 
       // Keyboard Legend Key
-      colorCtx.font = "bold 60px monospace";
+      colorCtx.font = "bold 120px monospace";
       colorCtx.fillStyle = "rgba(255,255,255,0.45)";
-      colorCtx.fillText(legend, 64, 110);
+      colorCtx.fillText(legend, 128, 220);
 
-      drawTechLogo(colorCtx, name, 256, 280, 200, false);
+      drawTechLogo(colorCtx, name, 512, 560, 400, brandColor, false);
 
       const colorTex = new THREE.CanvasTexture(colorCanvas);
       colorTex.colorSpace = THREE.SRGBColorSpace;
@@ -386,24 +474,24 @@ export function InteractiveKeyboard() {
 
       // 2. Grayscale Height Map Canvas (Bump Map)
       const bumpCanvas = document.createElement("canvas");
-      bumpCanvas.width = 512;
-      bumpCanvas.height = 512;
+      bumpCanvas.width = 1024;
+      bumpCanvas.height = 1024;
       const bumpCtx = bumpCanvas.getContext("2d");
       if (!bumpCtx) return null;
 
       bumpCtx.fillStyle = "#000000"; // Base height
-      bumpCtx.fillRect(0, 0, 512, 512);
+      bumpCtx.fillRect(0, 0, 1024, 1024);
 
       bumpCtx.strokeStyle = "#444444"; // Raised border
-      bumpCtx.lineWidth = 16;
-      bumpCtx.strokeRect(18, 18, 476, 476);
+      bumpCtx.lineWidth = 32;
+      bumpCtx.strokeRect(36, 36, 952, 952);
 
-      bumpCtx.font = "bold 60px monospace";
+      bumpCtx.font = "bold 120px monospace";
       bumpCtx.fillStyle = "#888888"; // Legend height
-      bumpCtx.fillText(legend, 64, 110);
+      bumpCtx.fillText(legend, 128, 220);
 
       // Force logo outlines to draw pure white inside the heightmap
-      drawTechLogo(bumpCtx, name, 256, 280, 200, true);
+      drawTechLogo(bumpCtx, name, 512, 560, 400, brandColor, true);
 
       const bumpTex = new THREE.CanvasTexture(bumpCanvas);
       bumpTex.anisotropy = maxAnisotropy;
@@ -445,7 +533,7 @@ export function InteractiveKeyboard() {
     const capGeo = createKeycapGeometry();
 
     // 5.3 Recessed switches plate cutout geometry
-    const switchGeo = new THREE.BoxGeometry(0.78, 0.015, 0.78);
+    const switchGeo = new THREE.BoxGeometry(0.76, 0.015, 0.76);
     const switchMat = new THREE.MeshStandardMaterial({
       color: 0x09090b,
       roughness: 0.85,
@@ -453,13 +541,7 @@ export function InteractiveKeyboard() {
     });
 
     // 5.4 Generate Keycap meshes and layout centered rows
-    const keycaps: {
-      mesh: THREE.Group;
-      skill: KeySkill;
-      restY: number;
-      targetY: number;
-      glowRing: THREE.Mesh;
-    }[] = [];
+    keycaps.length = 0;
 
     const glowGeo = new THREE.RingGeometry(0.36, 0.44, 24);
 
@@ -507,14 +589,14 @@ export function InteractiveKeyboard() {
       });
 
       const topMaterial = new THREE.MeshPhysicalMaterial({
-        color: capColor,
+        color: 0xffffff, // Pure white color to preserve official brand colors and prevent dark tinting
         map: textures.map,
         bumpMap: textures.bump,
         bumpScale: 0.0045, // Professional embossed relief
-        roughness: 0.22,
-        metalness: 0.05,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08
+        roughness: 0.18,    // Satin finish to reduce excessive reflections and glare over logos
+        metalness: 0.0,     // Eliminate metallic reflections
+        clearcoat: 0.15,    // Subtle protective print gloss
+        clearcoatRoughness: 0.25
       });
 
       // Apply top texture ONLY to the top face of the BoxGeometry (Index 2 is Group Y+)
@@ -529,7 +611,7 @@ export function InteractiveKeyboard() {
 
       const capMesh = new THREE.Mesh(capGeo, faceMaterials);
       capMesh.castShadow = true;
-      capMesh.receiveShadow = true;
+      capMesh.receiveShadow = false; // Prevent shadows from covering the logo/keycap
       capGroup.add(capMesh);
 
       keycaps.push({
@@ -649,8 +731,9 @@ export function InteractiveKeyboard() {
 
         const colorVal = new THREE.Color(cap.skill.glow);
         ledMat.color.copy(colorVal);
-        spotLight.color.setHex(parseInt(cap.skill.glow.replace("#", "0x")));
-        spotLight.intensity = 10;
+        activeLightCap = cap;
+        targetLightIntensity = 4.2;
+        targetLightColor.set(cap.skill.glow);
       }
     };
 
@@ -664,7 +747,8 @@ export function InteractiveKeyboard() {
           duration: 0.5,
           ease: "elastic.out(1, 0.48)"
         });
-        spotLight.intensity = 8;
+        activeLightCap = null;
+        targetLightIntensity = 0; // Fade out the keypress lighting
       }
     };
 
@@ -714,6 +798,26 @@ export function InteractiveKeyboard() {
       keyboardGroup.rotation.x = currentRotX + floatRotX;
       keyboardGroup.rotation.y = currentRotY;
       keyboardGroup.rotation.z = floatRotZ;
+
+      // Track and interpolate active point light position, color, and intensity
+      if (activeLightCap) {
+        targetLightX = activeLightCap.mesh.position.x;
+        targetLightY = activeLightCap.mesh.position.y + 0.13;
+        targetLightZ = activeLightCap.mesh.position.z;
+      }
+      
+      if (activePointLight) {
+        // Lerp position with spring-based easing
+        activePointLight.position.x += (targetLightX - activePointLight.position.x) * 0.12;
+        activePointLight.position.y += (targetLightY - activePointLight.position.y) * 0.12;
+        activePointLight.position.z += (targetLightZ - activePointLight.position.z) * 0.12;
+
+        // Lerp intensity
+        activePointLight.intensity += (targetLightIntensity - activePointLight.intensity) * 0.15;
+
+        // Lerp color
+        activePointLight.color.lerp(targetLightColor, 0.15);
+      }
 
       // Raycast hover tracking
       raycaster.setFromCamera(mouse, camera);
@@ -809,10 +913,14 @@ export function InteractiveKeyboard() {
           }
 
           setHoveredSkill(newCap.skill);
-          spotLight.color.setHex(parseInt(newCap.skill.glow.replace("#", "0x")));
+          activeLightCap = newCap;
+          targetLightIntensity = 4.2;
+          targetLightColor.set(newCap.skill.glow);
           dom.style.cursor = "pointer";
         } else {
           setHoveredSkill(null);
+          activeLightCap = null;
+          targetLightIntensity = 0;
           dom.style.cursor = "default";
         }
 
@@ -948,19 +1056,6 @@ export function InteractiveKeyboard() {
                         </p>
                       </div>
 
-                      {/* Terminal config snippet simulation */}
-                      <div className="rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-850 shadow-inner bg-neutral-955 text-neutral-300 p-4 font-mono text-[9px] leading-normal">
-                        <div className="flex items-center justify-between text-neutral-550 border-b border-neutral-900 pb-1.5 mb-1.5 font-mono">
-                          <span>THREEJS_TERMINAL</span>
-                          <span>SWITCH_{active.legend}</span>
-                        </div>
-                        <div className="text-indigo-400">
-                          $ get --capability {active.name.toLowerCase().replace(/[^a-z0-9]/g, "")}
-                        </div>
-                        <div className="text-emerald-400">
-                          &gt; Rendering 3D keycaps: OK (Mesh {active.legend})
-                        </div>
-                      </div>
                     </motion.div>
                   );
                 })()

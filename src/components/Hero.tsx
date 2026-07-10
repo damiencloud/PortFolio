@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { heroContent, socialLinks } from "@/content";
 import { ShimmerButton } from "@/components/ui/ShimmerButton";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 
 // Helper to render Lucide Icons dynamically
 function SocialIcon({ name, size = 16 }: { name: string; size?: number }) {
@@ -110,16 +111,11 @@ export function Hero() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center gap-4 mt-4"
         >
-          <ShimmerButton
+          <InteractiveHoverButton
             href={heroContent.primaryCta.href}
-            background="var(--primary-btn-bg)"
-            shimmerColor="var(--primary-btn-shimmer)"
-            borderRadius="9999px"
-            className="group relative flex items-center gap-2 px-7 py-3.5 text-sm font-semibold text-[var(--primary-btn-text)] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:scale-[1.02] transition-all duration-300"
-          >
-            {heroContent.primaryCta.label}
-            <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform duration-300" />
-          </ShimmerButton>
+            text={heroContent.primaryCta.label}
+            className="hover:scale-[1.02] transition-all duration-300 font-sans"
+          />
 
           <ShimmerButton
             href={heroContent.secondaryCta.href}
