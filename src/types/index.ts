@@ -84,7 +84,7 @@ export interface Skill {
   years?: number;
   featured: boolean;
   color: string;
-  icon?: string;
+  texture?: string;
 }
 
 export interface SkillCategoryInfo {
