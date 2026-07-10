@@ -2,9 +2,36 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import { cn } from "@/lib/utils";
-import { skills, skillCategories, marqueeSkillsRow1, marqueeSkillsRow2 } from "@/content";
+import { skills, skillCategories } from "@/content";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { TechButton } from "@/components/ui/TechButton";
+import { IconCloud } from "@/components/ui/interactive-icon-cloud";
+
+const slugs = [
+  "python",
+  "javascript",
+  "typescript",
+  "html5",
+  "css3",
+  "react",
+  "nextdotjs",
+  "tailwindcss",
+  "vite",
+  "framer",
+  "greensock",
+  "nodedotjs",
+  "express",
+  "postgresql",
+  "mysql",
+  "mongodb",
+  "docker",
+  "amazonaws",
+  "git",
+  "github",
+  "django",
+  "supabase",
+  "sqlite"
+];
 
 // Helper to render category icon
 function CategoryIcon({ name, size = 14 }: { name: string; size?: number }) {
@@ -51,39 +78,9 @@ export function TechStack() {
           title="Skills &amp; Technologies"
         />
 
-        {/* 3D Infinite Scroll Marquees */}
-        <div className="w-full flex flex-col gap-5 mb-16 relative">
-          {/* Shadow fades on sides */}
-          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none" />
-          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none" />
-
-          {/* Marquee Row 1 */}
-          <div className="flex overflow-hidden select-none gap-5 w-full">
-            <div className="flex items-center justify-around gap-5 animate-infinite-scroll min-w-full">
-              {marqueeSkillsRow1.concat(marqueeSkillsRow1).map((item, idx) => (
-                <span
-                  key={idx}
-                  className="px-6 py-3 rounded-2xl text-sm md:text-base font-medium font-sans border border-neutral-200/60 dark:border-neutral-800/60 bg-white/40 dark:bg-neutral-900/20 backdrop-blur-sm text-neutral-800 dark:text-neutral-200 whitespace-nowrap shadow-sm hover:border-indigo-500/50 transition-colors"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Marquee Row 2 (Reverse directions) */}
-          <div className="flex overflow-hidden select-none gap-5 w-full">
-            <div className="flex items-center justify-around gap-5 animate-infinite-scroll-reverse min-w-full">
-              {marqueeSkillsRow2.concat(marqueeSkillsRow2).map((item, idx) => (
-                <span
-                  key={idx}
-                  className="px-6 py-3 rounded-2xl text-sm md:text-base font-medium font-sans border border-neutral-200/60 dark:border-neutral-800/60 bg-white/40 dark:bg-neutral-900/20 backdrop-blur-sm text-neutral-800 dark:text-neutral-200 whitespace-nowrap shadow-sm hover:border-indigo-500/50 transition-colors"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
+        {/* Interactive 3D Icon Cloud */}
+        <div className="w-full max-w-lg mx-auto flex items-center justify-center relative mb-12 h-80 md:h-[400px]">
+          <IconCloud iconSlugs={slugs} />
         </div>
 
         {/* Tab Filters */}
