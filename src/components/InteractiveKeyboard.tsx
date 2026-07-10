@@ -19,7 +19,7 @@ interface KeySkill {
   color: string;
   glow: string;
   iconName: string;
-  iconUrl: string;
+  textureUrl: string;
 }
 
 // Meta lookup for brand details, icons, and tooltips
@@ -78,7 +78,7 @@ export function InteractiveKeyboard() {
       color: skill.color,
       glow: meta.glowColor,
       iconName: meta.iconName,
-      iconUrl: skill.icon || "/assets/logos/react.svg"
+      textureUrl: skill.texture || "/assets/logos/react.svg"
     };
   });
 
@@ -94,13 +94,13 @@ export function InteractiveKeyboard() {
       return new Promise<void>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = skill.iconUrl;
+        img.src = skill.textureUrl;
         img.onload = () => {
           logosRef.current[skill.name.toLowerCase()] = img;
           resolve();
         };
         img.onerror = () => {
-          console.warn(`Failed to preload logo for ${skill.name} at ${skill.iconUrl}`);
+          console.warn(`Failed to preload logo for ${skill.name} at ${skill.textureUrl}`);
           resolve();
         };
       });
@@ -229,7 +229,7 @@ export function InteractiveKeyboard() {
     const keyboardGroup = new THREE.Group();
     scene.add(keyboardGroup);
 
-    // Key dimensions and ortholinear layout spacing
+    // Key dimensions and spacing
     const keySpacingX = 0.94;
     const keySpacingZ = 0.94;
     const columnsPerRow = 5;
@@ -316,8 +316,12 @@ export function InteractiveKeyboard() {
         ctx.save();
         ctx.translate(cx, cy);
 
-        // Center and scale image maintaining official aspect ratio
-        const aspect = img.width / img.height || 1;
+        // Center and scale image, bypassing empty SVG dimension bounds safely
+        let aspect = 1.0;
+        if (img.width && img.height) {
+          aspect = img.width / img.height;
+        }
+
         let drawW = size * 0.95;
         let drawH = size * 0.95;
         if (aspect > 1) {
@@ -326,10 +330,23 @@ export function InteractiveKeyboard() {
           drawW = (size * 0.95) * aspect;
         }
 
-        ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-        ctx.globalCompositeOperation = "source-in";
-        ctx.fillStyle = "#ffffff"; // White print layers
-        ctx.fillRect(-drawW / 2, -drawH / 2, drawW, drawH);
+        if (isBumpMap) {
+          // Render white silhouette on transparent/black for the bumpmap relief channel
+          const offCanvas = document.createElement("canvas");
+          offCanvas.width = 512;
+          offCanvas.height = 512;
+          const offCtx = offCanvas.getContext("2d");
+          if (offCtx) {
+            offCtx.drawImage(img, 256 - drawW / 2, 256 - drawH / 2, drawW, drawH);
+            offCtx.globalCompositeOperation = "source-in";
+            offCtx.fillStyle = "#ffffff";
+            offCtx.fillRect(0, 0, 512, 512);
+            ctx.drawImage(offCanvas, -256, -256);
+          }
+        } else {
+          // Render SVG using official brand colors directly onto the color map
+          ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+        }
         ctx.restore();
       }
     };
@@ -344,13 +361,16 @@ export function InteractiveKeyboard() {
       const colorCtx = colorCanvas.getContext("2d");
       if (!colorCtx) return null;
 
-      colorCtx.fillStyle = brandColor;
+      // Dark carbon textured keycap top face
+      colorCtx.fillStyle = "#1e1e24";
       colorCtx.fillRect(0, 0, 512, 512);
 
-      colorCtx.strokeStyle = "rgba(255,255,255,0.18)";
-      colorCtx.lineWidth = 12;
+      // Elegant inner border styled with official brand color
+      colorCtx.strokeStyle = brandColor;
+      colorCtx.lineWidth = 16;
       colorCtx.strokeRect(18, 18, 476, 476);
 
+      // Keyboard Legend Key
       colorCtx.font = "bold 60px monospace";
       colorCtx.fillStyle = "rgba(255,255,255,0.45)";
       colorCtx.fillText(legend, 64, 110);
@@ -361,6 +381,7 @@ export function InteractiveKeyboard() {
       colorTex.colorSpace = THREE.SRGBColorSpace;
       colorTex.anisotropy = maxAnisotropy;
       colorTex.minFilter = THREE.LinearMipmapLinearFilter;
+      colorTex.magFilter = THREE.LinearFilter;
       colorTex.generateMipmaps = true;
 
       // 2. Grayscale Height Map Canvas (Bump Map)
@@ -373,8 +394,8 @@ export function InteractiveKeyboard() {
       bumpCtx.fillStyle = "#000000"; // Base height
       bumpCtx.fillRect(0, 0, 512, 512);
 
-      bumpCtx.strokeStyle = "#444444"; // Bevel profile (slightly raised)
-      bumpCtx.lineWidth = 12;
+      bumpCtx.strokeStyle = "#444444"; // Raised border
+      bumpCtx.lineWidth = 16;
       bumpCtx.strokeRect(18, 18, 476, 476);
 
       bumpCtx.font = "bold 60px monospace";
@@ -387,6 +408,7 @@ export function InteractiveKeyboard() {
       const bumpTex = new THREE.CanvasTexture(bumpCanvas);
       bumpTex.anisotropy = maxAnisotropy;
       bumpTex.minFilter = THREE.LinearMipmapLinearFilter;
+      bumpTex.magFilter = THREE.LinearFilter;
       bumpTex.generateMipmaps = true;
 
       return { colorTex, bumpTex };
@@ -400,36 +422,23 @@ export function InteractiveKeyboard() {
       if (hover) keyHoverTextures[skill.key] = { map: hover.colorTex, bump: hover.bumpTex };
     });
 
-    // 5.2 OEM Tapered Keycap geometry generator
+    // 5.2 Tapered BoxGeometry keycap with six materials index groups
     const createKeycapGeometry = () => {
       const w = 0.72;
+      const h = 0.22;
       const d = 0.72;
-      const radius = 0.15;
+      const geo = new THREE.BoxGeometry(w, h, d);
 
-      const shape = new THREE.Shape();
-      shape.moveTo(-w / 2 + radius, -d / 2);
-      shape.lineTo(w / 2 - radius, -d / 2);
-      shape.quadraticCurveTo(w / 2, -d / 2, w / 2, -d / 2 + radius);
-      shape.lineTo(w / 2, d / 2 - radius);
-      shape.quadraticCurveTo(w / 2, d / 2, w / 2 - radius, d / 2);
-      shape.lineTo(-w / 2 + radius, d / 2);
-      shape.quadraticCurveTo(-w / 2, d / 2, -w / 2, d / 2 - radius);
-      shape.lineTo(-w / 2, -d / 2 + radius);
-      shape.quadraticCurveTo(-w / 2, -d / 2, -w / 2 + radius, -d / 2);
-
-      const extrudeSettings = {
-        steps: 1,
-        depth: 0.22,
-        bevelEnabled: true,
-        bevelThickness: 0.08,
-        bevelSize: 0.07,
-        bevelOffset: -0.045, // OEM profile tapering angle
-        bevelSegments: 5
-      };
-
-      const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-      geo.center();
-      geo.rotateX(-Math.PI / 2);
+      const posAttr = geo.attributes.position;
+      for (let i = 0; i < posAttr.count; i++) {
+        const y = posAttr.getY(i);
+        if (y > 0) {
+          // Taper top face vertices inward by 18% (scale factor 0.82)
+          posAttr.setX(i, posAttr.getX(i) * 0.82);
+          posAttr.setZ(i, posAttr.getZ(i) * 0.82);
+        }
+      }
+      geo.computeVertexNormals();
       return geo;
     };
 
@@ -485,28 +494,37 @@ export function InteractiveKeyboard() {
       glowMesh.position.y = -0.165;
       capGroup.add(glowMesh);
 
-      // Materials (Semi-matte sides, highly glossy clearcoat embossed face)
+      // Materials (Semi-matte sides, highly glossy clearcoat embossed top face)
       const capColor = new THREE.Color(skill.glow);
       const textures = keyTextures[skill.key];
 
+      const sideMaterial = new THREE.MeshPhysicalMaterial({
+        color: capColor,
+        roughness: 0.36,
+        metalness: 0.1,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.2
+      });
+
+      const topMaterial = new THREE.MeshPhysicalMaterial({
+        color: capColor,
+        map: textures.map,
+        bumpMap: textures.bump,
+        bumpScale: 0.0045, // Professional embossed relief
+        roughness: 0.22,
+        metalness: 0.05,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.08
+      });
+
+      // Apply top texture ONLY to the top face of the BoxGeometry (Index 2 is Group Y+)
       const faceMaterials = [
-        new THREE.MeshPhysicalMaterial({
-          color: capColor,
-          roughness: 0.36,
-          metalness: 0.1,
-          clearcoat: 0.9,
-          clearcoatRoughness: 0.2
-        }), // Sides (Matte-gloss plastic)
-        new THREE.MeshPhysicalMaterial({
-          color: capColor,
-          map: textures.map,
-          bumpMap: textures.bump,
-          bumpScale: 0.0045, // Professional embossed relief
-          roughness: 0.22,
-          metalness: 0.05,
-          clearcoat: 1.0,
-          clearcoatRoughness: 0.08
-        }) // Top Face
+        sideMaterial, // Index 0: Right (X+)
+        sideMaterial, // Index 1: Left (X-)
+        topMaterial,  // Index 2: Top (Y+)
+        sideMaterial, // Index 3: Bottom (Y-)
+        sideMaterial, // Index 4: Front (Z+)
+        sideMaterial  // Index 5: Back (Z-)
       ];
 
       const capMesh = new THREE.Mesh(capGeo, faceMaterials);
@@ -741,10 +759,10 @@ export function InteractiveKeyboard() {
             ease: "power1.out"
           });
 
-          // Restore normal map and normal bump map textures
-          const topMesh = prevCap.mesh.children[2] as THREE.Mesh;
-          if (topMesh && Array.isArray(topMesh.material)) {
-            const topMat = topMesh.material[1] as THREE.MeshPhysicalMaterial;
+          // Restore normal map and normal bump map textures on top material
+          const childMesh = prevCap.mesh.children[2] as THREE.Mesh;
+          if (childMesh && Array.isArray(childMesh.material)) {
+            const topMat = childMesh.material[2] as THREE.MeshPhysicalMaterial;
             if (topMat) {
               const textures = keyTextures[prevCap.skill.key];
               topMat.map = textures.map;
@@ -778,10 +796,10 @@ export function InteractiveKeyboard() {
             ease: "power1.out"
           });
 
-          // Swap hover map and hover bump map textures
-          const topMesh = newCap.mesh.children[2] as THREE.Mesh;
-          if (topMesh && Array.isArray(topMesh.material)) {
-            const topMat = topMesh.material[1] as THREE.MeshPhysicalMaterial;
+          // Swap hover map and hover bump map textures on top material
+          const childMesh = newCap.mesh.children[2] as THREE.Mesh;
+          if (childMesh && Array.isArray(childMesh.material)) {
+            const topMat = childMesh.material[2] as THREE.MeshPhysicalMaterial;
             if (topMat) {
               const textures = keyHoverTextures[newCap.skill.key];
               topMat.map = textures.map;
