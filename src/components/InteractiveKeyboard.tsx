@@ -450,13 +450,18 @@ export function InteractiveKeyboard() {
 
     const generateKeyTexture = (legend: string, name: string, isHovered: boolean, brandColor: string) => {
       const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+      
+      const res = isMobileDevice ? 256 : 512;
+      const scale = res / 1024;
 
       // 1. Color Map Canvas
       const colorCanvas = document.createElement("canvas");
-      colorCanvas.width = 1024;
-      colorCanvas.height = 1024;
+      colorCanvas.width = res;
+      colorCanvas.height = res;
       const colorCtx = colorCanvas.getContext("2d");
       if (!colorCtx) return null;
+
+      colorCtx.scale(scale, scale);
 
       // Dark carbon textured keycap top face
       colorCtx.fillStyle = "#1e1e24";
@@ -483,10 +488,12 @@ export function InteractiveKeyboard() {
 
       // 2. Grayscale Height Map Canvas (Bump Map)
       const bumpCanvas = document.createElement("canvas");
-      bumpCanvas.width = 1024;
-      bumpCanvas.height = 1024;
+      bumpCanvas.width = res;
+      bumpCanvas.height = res;
       const bumpCtx = bumpCanvas.getContext("2d");
       if (!bumpCtx) return null;
+
+      bumpCtx.scale(scale, scale);
 
       bumpCtx.fillStyle = "#000000"; // Base height
       bumpCtx.fillRect(0, 0, 1024, 1024);
@@ -953,12 +960,25 @@ export function InteractiveKeyboard() {
       window.removeEventListener("keyup", handlePhysicalKeyUp);
       window.removeEventListener("resize", handleResize);
 
+      // Deep dispose geometries and materials
+      scene.traverse((object) => {
+        if ((object as THREE.Mesh).isMesh) {
+          const mesh = object as THREE.Mesh;
+          if (mesh.geometry) {
+            mesh.geometry.dispose();
+          }
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+              mesh.material.forEach(mat => mat.dispose());
+            } else {
+              mesh.material.dispose();
+            }
+          }
+        }
+      });
+
       scene.clear();
       renderer.dispose();
-      capGeo.dispose();
-      caseGeo.dispose();
-      ledGeo.dispose();
-      glowGeo.dispose();
       Object.values(keyTextures).forEach((t) => {
         t.map.dispose();
         t.bump.dispose();

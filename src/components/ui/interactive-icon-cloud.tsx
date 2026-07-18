@@ -146,8 +146,8 @@ const CloudContainer = React.memo(({ children, options }: { children: React.Reac
       <canvas
         ref={canvasRef}
         id={canvasId}
-        width={1000}
-        height={1000}
+        width={800}
+        height={800}
         style={{
           width: "100%",
           maxWidth: "70vh",
