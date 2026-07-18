@@ -196,16 +196,16 @@ export function InteractiveKeyboard() {
     camera.lookAt(0, -0.4, 0);
 
     // 3. WebGL Renderer with optimized Pixel Ratio
-    const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
+    const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || window.matchMedia("(pointer: coarse)").matches;
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
+      antialias: !isMobileDevice,
       alpha: true,
       powerPreference: "high-performance"
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(isMobileDevice ? 1.2 : Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(isMobileDevice ? 1.0 : Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = !isMobileDevice;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.LinearToneMapping; // Ensure tone mapping does not darken logos excessively
     renderer.toneMappingExposure = 1.35;           // Increase exposure of the scene
@@ -217,16 +217,18 @@ export function InteractiveKeyboard() {
     // Keylight (directional with shadow casting)
     const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
     keyLight.position.set(5, 8, 4);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = isMobileDevice ? 512 : 1024;
-    keyLight.shadow.mapSize.height = isMobileDevice ? 512 : 1024;
-    keyLight.shadow.bias = -0.0006;
-    keyLight.shadow.camera.left = -4;
-    keyLight.shadow.camera.right = 4;
-    keyLight.shadow.camera.top = 4;
-    keyLight.shadow.camera.bottom = -4;
-    keyLight.shadow.camera.near = 1;
-    keyLight.shadow.camera.far = 15;
+    keyLight.castShadow = !isMobileDevice;
+    if (!isMobileDevice) {
+      keyLight.shadow.mapSize.width = 1024;
+      keyLight.shadow.mapSize.height = 1024;
+      keyLight.shadow.bias = -0.0006;
+      keyLight.shadow.camera.left = -4;
+      keyLight.shadow.camera.right = 4;
+      keyLight.shadow.camera.top = 4;
+      keyLight.shadow.camera.bottom = -4;
+      keyLight.shadow.camera.near = 1;
+      keyLight.shadow.camera.far = 15;
+    }
     scene.add(keyLight);
 
     // Dedicated soft fill light aimed at the keycaps (no shadows, high diffuse)
@@ -253,6 +255,13 @@ export function InteractiveKeyboard() {
     // 5. Keyboard Group
     keyboardGroup = new THREE.Group();
     scene.add(keyboardGroup);
+
+    const updateKeyboardScale = (w: number) => {
+      // 768px is roughly where we need to start shrinking
+      const scale = w < 768 ? Math.max(0.65, w / 768) : 1.0;
+      keyboardGroup.scale.set(scale, scale, scale);
+    };
+    updateKeyboardScale(width);
 
     // Surface-anchored PointLight for localized hover glows
     activePointLight = new THREE.PointLight(0xffffff, 0, 2.0, 1.5);
@@ -763,6 +772,7 @@ export function InteractiveKeyboard() {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      updateKeyboardScale(width);
     };
     window.addEventListener("resize", handleResize);
 

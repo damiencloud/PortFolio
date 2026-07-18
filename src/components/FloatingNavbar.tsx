@@ -47,11 +47,14 @@ export function FloatingNavbar() {
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
     } else {
       document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     }
     return () => {
       document.body.style.overflow = "";
+      document.body.style.touchAction = "";
     };
   }, [mobileMenuOpen]);
 
@@ -68,8 +71,8 @@ export function FloatingNavbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full px-6 md:px-12 py-6",
-          isScrolled ? "py-4" : "py-6"
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 w-full px-6 md:px-12 pb-4 pt-[max(1.5rem,env(safe-area-inset-top))]",
+          isScrolled ? "py-4 pt-[max(1rem,env(safe-area-inset-top))]" : ""
         )}
       >
         <div
@@ -155,7 +158,7 @@ export function FloatingNavbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-lg flex flex-col justify-center p-8 lg:hidden"
+            className="fixed inset-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-lg flex flex-col justify-center p-8 lg:hidden pt-[max(2rem,env(safe-area-inset-top))] pb-[max(2rem,env(safe-area-inset-bottom))] touch-none"
           >
             <nav className="flex flex-col gap-6 items-center text-center">
               {mainNavLinks.map((link, idx) => (

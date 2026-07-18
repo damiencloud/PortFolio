@@ -236,7 +236,7 @@ export function ProjectShowcase() {
               </div>
 
               {/* Drawer Footer */}
-              <div className="px-5 md:px-8 py-4 md:py-5 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-950/80 backdrop-blur-md">
+              <div className="px-5 md:px-8 py-4 md:py-5 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between bg-neutral-50/80 dark:bg-neutral-950/80 backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
                 <a
                   href={selectedProject.githubUrl}
                   target="_blank"

@@ -1,39 +1,30 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useRef, useState, useMemo } from "react"
 import { useTheme } from "next-themes"
-import {
-  Cloud,
-  fetchSimpleIcons,
-  ICloud,
-  renderSimpleIcon,
-  SimpleIcon,
-} from "react-icon-cloud"
+import { fetchSimpleIcons, renderSimpleIcon, SimpleIcon } from "react-icon-cloud"
 
-export const cloudProps: Omit<ICloud, "children"> = {
-  containerProps: {
-    style: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      width: "100%",
-      paddingTop: 40,
-    },
-  },
+// Ensure window type matches TagCanvas globals
+declare global {
+  interface Window {
+    TagCanvas?: any;
+  }
+}
+
+export const cloudProps = {
   options: {
     reverse: true,
     depth: 1,
     wheelZoom: false,
     imageScale: 2,
     activeCursor: "default",
-    tooltip: "native",
-    initial: [0.1, -0.1],
+    tooltip: "native" as const,
+    initial: [0.08, -0.08] as [number, number],
     clickToFront: 500,
     tooltipDelay: 0,
     outlineColour: "#0000",
     maxSpeed: 0.04,
-    minSpeed: 0.02,
-    // dragControl: false,
+    minSpeed: 0.015,
   },
 }
 
@@ -63,7 +54,117 @@ export type DynamicCloudProps = {
 
 type IconData = Awaited<ReturnType<typeof fetchSimpleIcons>>
 
-export function IconCloud({ iconSlugs }: DynamicCloudProps) {
+// Optimized container that holds the canvas element stably without restarts
+const CloudContainer = React.memo(({ children, options }: { children: React.ReactNode; options: any }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasId] = useState(() => `canvas-${Math.random().toString(36).substring(2, 9)}`);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isIntersecting, setIsIntersecting] = useState(false);
+
+  // 1. Pause canvas rendering when scrolled off-screen to save CPU/GPU resources
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // 2. Initialize TagCanvas instance on mount and delete on unmount
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !window.TagCanvas) return;
+
+    try {
+      window.TagCanvas.Start(canvasId, null, {
+        ...options,
+        animTiming: "Smooth",     // Target stable 60 FPS pacing via requestAnimationFrame
+        outlineMethod: "none",    // Avoid drawing expensive outlines
+        imageMode: "image",       // Render image-only to bypass text layout costs
+        noSelect: true,           // Avoid selection triggers
+        lock: null,
+      });
+      setHasStarted(true);
+    } catch (e) {
+      console.error("Failed to start TagCanvas:", e);
+    }
+
+    return () => {
+      if (window.TagCanvas) {
+        try {
+          window.TagCanvas.Delete(canvasId);
+        } catch (e) {
+          console.error("Failed to delete TagCanvas:", e);
+        }
+      }
+    };
+  }, [canvasId, options]);
+
+  // 3. Control animation play-state based on visibility
+  useEffect(() => {
+    if (!hasStarted || !window.TagCanvas) return;
+
+    if (isIntersecting) {
+      window.TagCanvas.Resume(canvasId);
+    } else {
+      window.TagCanvas.Pause(canvasId);
+    }
+  }, [isIntersecting, hasStarted, canvasId]);
+
+  // 4. Update tags in-place when theme or children change without destroying the canvas
+  useEffect(() => {
+    let animationFrameId: number;
+    if (hasStarted && window.TagCanvas) {
+      // Wait for next frame to ensure React has flushed DOM mutations (the <a> and <img> tags inside canvas)
+      animationFrameId = requestAnimationFrame(() => {
+        if (window.TagCanvas) {
+          try {
+            window.TagCanvas.Update(canvasId);
+          } catch (e) {
+            console.error("Failed to update TagCanvas tags:", e);
+          }
+        }
+      });
+    }
+    return () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+  }, [children, hasStarted, canvasId]);
+
+  return (
+    <div ref={containerRef} style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", paddingTop: 20 }}>
+      <canvas
+        ref={canvasRef}
+        id={canvasId}
+        width={1000}
+        height={1000}
+        style={{
+          width: "100%",
+          maxWidth: "70vh",
+          willChange: "transform",
+          transform: "translate3d(0,0,0)",
+        }}
+      >
+        {children}
+      </canvas>
+    </div>
+  );
+});
+
+CloudContainer.displayName = "CloudContainer";
+
+// Optimized wrapper using React.memo to completely decouple from parent state updates
+export const IconCloud = React.memo(({ iconSlugs }: DynamicCloudProps) => {
   const [data, setData] = useState<IconData | null>(null)
   const { theme } = useTheme()
 
@@ -75,14 +176,17 @@ export function IconCloud({ iconSlugs }: DynamicCloudProps) {
     if (!data) return null
 
     return Object.values(data.simpleIcons).map((icon) =>
-      renderCustomIcon(icon, theme || "light"),
+      renderCustomIcon(icon, theme || "light")
     )
   }, [data, theme])
 
+  if (!data) return null
+
   return (
-    // @ts-ignore
-    <Cloud {...cloudProps}>
-      <>{renderedIcons}</>
-    </Cloud>
+    <CloudContainer options={cloudProps.options}>
+      {renderedIcons}
+    </CloudContainer>
   )
-}
+})
+
+IconCloud.displayName = "IconCloud"

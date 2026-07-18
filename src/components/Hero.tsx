@@ -73,7 +73,7 @@ export function Hero() {
         </motion.div>
 
         {/* Hero Title */}
-        <h1 className="text-3xl xs:text-5xl sm:text-6xl md:text-8xl font-bold font-sans tracking-tight text-neutral-900 dark:text-neutral-50 max-w-4xl leading-[1.05]">
+        <h1 className="text-[clamp(2.5rem,8.5vw,6rem)] font-bold font-sans tracking-tight text-neutral-900 dark:text-neutral-50 max-w-4xl leading-[1.05]">
           {sentence.split(" ").map((word, i) => {
             const isHighlighted = heroContent.highlightWords.some((hWord) =>
               word.toLowerCase().includes(hWord.toLowerCase().replace(/[^a-zA-Z]/g, ""))
@@ -101,7 +101,7 @@ export function Hero() {
         {/* Hero Subtitle Description */}
         <motion.p
           variants={itemVariants}
-          className="text-neutral-600 dark:text-neutral-400 font-sans text-lg md:text-2xl font-light tracking-wide max-w-3xl leading-relaxed"
+          className="text-neutral-600 dark:text-neutral-400 font-sans text-base sm:text-lg md:text-2xl font-light tracking-wide max-w-3xl leading-relaxed px-2"
         >
           {heroContent.description}
         </motion.p>
