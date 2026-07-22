@@ -1,9 +1,6 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Hero } from "@/components/Hero";
 import { BentoGrid } from "@/components/BentoGrid";
-import { TechStack } from "@/components/TechStack";
-import { InteractiveKeyboard } from "@/components/InteractiveKeyboard";
-import { ProjectShowcase } from "@/components/ProjectShowcase";
 import { ExperienceTimeline } from "@/components/ExperienceTimeline";
 import { Certificates } from "@/components/Certificates";
 import { ContactSection } from "@/components/ContactSection";
@@ -13,6 +10,18 @@ import { DockNav } from "@/components/DockNav";
 import { ChevronUp } from "lucide-react";
 import { siteConfig, footerNavLinks, socialLinks } from "@/content";
 import { DottedSurface } from "@/components/ui/dotted-surface";
+
+// Lazy-loaded heavy 3D and canvas interactive components
+const TechStack = lazy(() => import("@/components/TechStack"));
+const InteractiveKeyboard = lazy(() => import("@/components/InteractiveKeyboard"));
+const ProjectShowcase = lazy(() => import("@/components/ProjectShowcase"));
+
+const SectionFallback = ({ height = "h-[400px]", label }: { height?: string; label?: string }) => (
+  <div className={`w-full ${height} my-12 flex flex-col items-center justify-center gap-3 bg-neutral-900/5 dark:bg-neutral-950/20 border border-neutral-200/40 dark:border-neutral-850/40 rounded-3xl backdrop-blur-sm p-6 text-center animate-pulse`}>
+    <div className="w-7 h-7 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+    {label && <span className="text-xs font-mono text-neutral-500 uppercase tracking-widest">{label}</span>}
+  </div>
+);
 
 export default function Home() {
   const handleScrollToTop = (e: React.MouseEvent) => {
@@ -43,13 +52,19 @@ export default function Home() {
         <ExperienceTimeline />
 
         {/* Tech Skill sets (Skills) */}
-        <TechStack />
+        <Suspense fallback={<SectionFallback height="h-[600px]" label="Loading Technical Arsenal..." />}>
+          <TechStack />
+        </Suspense>
 
         {/* Interactive 3D Keyboard */}
-        <InteractiveKeyboard />
+        <Suspense fallback={<SectionFallback height="h-[500px]" label="Loading 3D Engine..." />}>
+          <InteractiveKeyboard />
+        </Suspense>
 
         {/* Case Studies (Projects) */}
-        <ProjectShowcase />
+        <Suspense fallback={<SectionFallback height="h-[600px]" label="Loading Case Studies..." />}>
+          <ProjectShowcase />
+        </Suspense>
 
         {/* Credentials (Education / Certifications) */}
         <Certificates />

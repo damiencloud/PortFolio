@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { cn } from "@/lib/utils";
+import { checkIsMobile, getDynamicDpr } from "@/lib/mobile-profile";
 import { skills } from "@/content";
 import * as LucideIcons from "lucide-react";
 
@@ -196,15 +197,15 @@ export function InteractiveKeyboard() {
     camera.lookAt(0, -0.4, 0);
 
     // 3. WebGL Renderer with optimized Pixel Ratio
-    const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || window.matchMedia("(pointer: coarse)").matches;
+    const isMobileDevice = checkIsMobile();
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       antialias: !isMobileDevice,
       alpha: true,
-      powerPreference: "high-performance"
+      powerPreference: isMobileDevice ? "low-power" : "high-performance"
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(isMobileDevice ? 1.0 : Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(getDynamicDpr(isMobileDevice));
     renderer.shadowMap.enabled = !isMobileDevice;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.LinearToneMapping; // Ensure tone mapping does not darken logos excessively
@@ -314,7 +315,7 @@ export function InteractiveKeyboard() {
         bevelEnabled: true,
         bevelThickness: 0.16,
         bevelSize: 0.08,
-        bevelSegments: 8
+        bevelSegments: isMobileDevice ? 2 : 8
       };
 
       const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
@@ -328,18 +329,18 @@ export function InteractiveKeyboard() {
       color: 0x18181b, // Matte charcoal chassis
       roughness: 0.28,
       metalness: 0.8,
-      clearcoat: 1.0,
+      clearcoat: isMobileDevice ? 0.2 : 1.0,
       clearcoatRoughness: 0.16,
       reflectivity: 0.8
     });
     const caseMesh = new THREE.Mesh(caseGeo, caseMat);
     caseMesh.position.y = -0.15;
     caseMesh.receiveShadow = true;
-    caseMesh.castShadow = true;
+    caseMesh.castShadow = !isMobileDevice;
     keyboardGroup.add(caseMesh);
 
     // Status Light LED
-    const ledGeo = new THREE.SphereGeometry(0.04, 16, 16);
+    const ledGeo = new THREE.SphereGeometry(0.04, isMobileDevice ? 8 : 16, isMobileDevice ? 8 : 16);
     const ledMat = new THREE.MeshBasicMaterial({ color: 0x6366f1 });
     const ledMesh = new THREE.Mesh(ledGeo, ledMat);
     ledMesh.position.set(caseWidth / 2 - 0.28, 0.18, -caseDepth / 2 + 0.28);
@@ -559,7 +560,7 @@ export function InteractiveKeyboard() {
     // 5.4 Generate Keycap meshes and layout centered rows
     keycaps.length = 0;
 
-    const glowGeo = new THREE.RingGeometry(0.36, 0.44, 24);
+    const glowGeo = new THREE.RingGeometry(0.36, 0.44, isMobileDevice ? 12 : 24);
 
     currentSkills.forEach((skill, idx) => {
       const row = Math.floor(idx / columnsPerRow);
@@ -979,13 +980,17 @@ export function InteractiveKeyboard() {
 
       scene.clear();
       renderer.dispose();
+      try {
+        renderer.forceContextLoss();
+      } catch (e) {}
+
       Object.values(keyTextures).forEach((t) => {
-        t.map.dispose();
-        t.bump.dispose();
+        t.map?.dispose();
+        t.bump?.dispose();
       });
       Object.values(keyHoverTextures).forEach((t) => {
-        t.map.dispose();
-        t.bump.dispose();
+        t.map?.dispose();
+        t.bump?.dispose();
       });
     };
   }, [logosLoaded]);

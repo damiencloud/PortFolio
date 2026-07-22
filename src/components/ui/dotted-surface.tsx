@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { checkIsMobile, getDynamicDpr } from '@/lib/mobile-profile';
 import { useTheme } from 'next-themes';
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
@@ -26,9 +27,10 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 	useEffect(() => {
 		if (!containerRef.current) return;
 
-		const SEPARATION = 150;
-		const AMOUNTX = 40;
-		const AMOUNTY = 60;
+		const isMobile = checkIsMobile();
+		const SEPARATION = isMobile ? 220 : 150;
+		const AMOUNTX = isMobile ? 20 : 40;
+		const AMOUNTY = isMobile ? 30 : 60;
 
 		// Scene setup
 		const scene = new THREE.Scene();
@@ -47,9 +49,10 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 
 		const renderer = new THREE.WebGLRenderer({
 			alpha: true,
-			antialias: true,
+			antialias: !isMobile,
+			powerPreference: isMobile ? "low-power" : "high-performance",
 		});
-		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setPixelRatio(getDynamicDpr(isMobile));
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		renderer.setClearColor(scene.fog.color, 0);
 
@@ -101,10 +104,21 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 
 		let count = 0;
 		let animationId = 0;
+		let isVisible = true;
 
-		// Animation function
+		const observer = new IntersectionObserver(([entry]) => {
+			isVisible = entry.isIntersecting;
+		}, { threshold: 0.01 });
+
+		if (containerRef.current) {
+			observer.observe(containerRef.current);
+		}
+
+		// Animation function with visibility check
 		const animate = () => {
 			animationId = requestAnimationFrame(animate);
+
+			if (!isVisible || document.hidden) return;
 
 			const positionAttribute = geometry.attributes.position;
 			const positions = positionAttribute.array as Float32Array;
@@ -125,7 +139,7 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 
 			positionAttribute.needsUpdate = true;
 			renderer.render(scene, camera);
-			count += 0.1;
+			count += 0.08;
 		};
 
 		// Handle window resize
@@ -152,6 +166,7 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 
 		// Cleanup function
 		return () => {
+			observer.disconnect();
 			window.removeEventListener('resize', handleResize);
 
 			if (sceneRef.current) {
@@ -170,6 +185,9 @@ export function DottedSurface({ className, children, ...props }: DottedSurfacePr
 				});
 
 				sceneRef.current.renderer.dispose();
+				try {
+					sceneRef.current.renderer.forceContextLoss();
+				} catch (e) {}
 
 				if (container && sceneRef.current.renderer.domElement) {
 					if (container.contains(sceneRef.current.renderer.domElement)) {

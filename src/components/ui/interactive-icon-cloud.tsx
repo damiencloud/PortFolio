@@ -11,22 +11,22 @@ declare global {
   }
 }
 
-export const cloudProps = {
-  options: {
-    reverse: true,
-    depth: 1,
-    wheelZoom: false,
-    imageScale: 2,
-    activeCursor: "default",
-    tooltip: "native" as const,
-    initial: [0.08, -0.08] as [number, number],
-    clickToFront: 500,
-    tooltipDelay: 0,
-    outlineColour: "#0000",
-    maxSpeed: 0.04,
-    minSpeed: 0.015,
-  },
-}
+import { checkIsMobile } from "@/lib/mobile-profile"
+
+export const getCloudOptions = (isMobile: boolean) => ({
+  reverse: true,
+  depth: 1,
+  wheelZoom: false,
+  imageScale: isMobile ? 1.5 : 2,
+  activeCursor: "default",
+  tooltip: "native" as const,
+  initial: [0.06, -0.06] as [number, number],
+  clickToFront: 500,
+  tooltipDelay: 0,
+  outlineColour: "#0000",
+  maxSpeed: isMobile ? 0.025 : 0.04,
+  minSpeed: isMobile ? 0.01 : 0.015,
+})
 
 export const renderCustomIcon = (icon: SimpleIcon, theme: string) => {
   const bgHex = theme === "light" ? "#f3f2ef" : "#080510"
@@ -141,13 +141,16 @@ const CloudContainer = React.memo(({ children, options }: { children: React.Reac
     };
   }, [children, hasStarted, canvasId]);
 
+  const isMobile = checkIsMobile();
+  const canvasDimension = isMobile ? 400 : 800;
+
   return (
     <div ref={containerRef} style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", paddingTop: 20 }}>
       <canvas
         ref={canvasRef}
         id={canvasId}
-        width={800}
-        height={800}
+        width={canvasDimension}
+        height={canvasDimension}
         style={{
           width: "100%",
           maxWidth: "70vh",
@@ -167,6 +170,8 @@ CloudContainer.displayName = "CloudContainer";
 export const IconCloud = React.memo(({ iconSlugs }: DynamicCloudProps) => {
   const [data, setData] = useState<IconData | null>(null)
   const { theme } = useTheme()
+  const isMobile = checkIsMobile()
+  const options = useMemo(() => getCloudOptions(isMobile), [isMobile])
 
   useEffect(() => {
     fetchSimpleIcons({ slugs: iconSlugs }).then(setData)
@@ -183,7 +188,7 @@ export const IconCloud = React.memo(({ iconSlugs }: DynamicCloudProps) => {
   if (!data) return null
 
   return (
-    <CloudContainer options={cloudProps.options}>
+    <CloudContainer options={options}>
       {renderedIcons}
     </CloudContainer>
   )

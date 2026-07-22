@@ -1,10 +1,14 @@
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
+import { checkIsMobile } from "@/lib/mobile-profile";
 
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // Disable smooth scroll library on mobile devices to preserve native touch momentum and save RAF cycles
+    if (checkIsMobile()) return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import { checkIsMobile } from "@/lib/mobile-profile";
 
 export function BackgroundEffects() {
   const mouseX = useMotionValue(0);
@@ -14,8 +15,10 @@ export function BackgroundEffects() {
 
   useEffect(() => {
     setIsMounted(true);
-    setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    setIsMobile(checkIsMobile());
     
+    if (checkIsMobile()) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -32,7 +35,9 @@ export function BackgroundEffects() {
   return (
     <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
       {/* 3D Animated Background Blobs */}
-      <div className="absolute inset-0 filter blur-[120px] opacity-45 dark:opacity-40 transition-opacity duration-1000">
+      <div className={`absolute inset-0 transition-opacity duration-1000 ${
+        isMobile ? "blur-[30px] opacity-30 dark:opacity-25" : "blur-[120px] opacity-45 dark:opacity-40"
+      }`}>
         {/* Blob 1: Indigo */}
         <motion.div
           animate={isMobile ? undefined : {
